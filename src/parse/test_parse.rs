@@ -5,7 +5,7 @@ use super::parse::Parser;
 use std::collections::BTreeMap;
 use std::cell::RefCell;
 use std::rc::Rc;
-use project::{Ressource, RessourcePtr, TokenProcess};
+use project::{Resource, ResourcePtr, TokenProcess};
 
 fn test_parsability(s: &str, is_correct: bool) {
 	println!("\nFor : {:?}", s);

@@ -9,6 +9,7 @@ use std::fs::File;
 use std::io::Read;
 use parse::fc_string;
 use error::{KrpSimError};
+use project::{Project};
 
 fn file_as_string(file_name: &String) -> String {
     let mut f = File::open(file_name).unwrap();
@@ -31,8 +32,9 @@ fn main() {
 	let instructions_str = file_as_string(&file_name);
 	match parse::Parser::parse(&instructions_str) {
 	    Ok((ressources, optimize, processes)) => {
-	    	println!("ressources: {:?}\noptimize: {:?}\nprocesses: {:?}",
-	    			ressources, optimize, processes);
+	    	println!("optimize {:?}", optimize);
+	    	let project = Project::new(ressources, processes, optimize);
+	    	println!("project {:?}", project);
 	    },
 	    Err(e) => {
 	    	match e {

@@ -5,7 +5,7 @@ use regex::Regex;
 use std::collections::BTreeMap;
 use std::cell::RefCell;
 use std::rc::Rc;
-use project::{Ressource, RessourcePtr, TokenProcess};
+use project::{Resource, ResourcePtr, TokenProcess};
 use error::{KrpSimError};
 
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -33,7 +33,7 @@ pub struct Parser {
 	/// The stack for generating the abstract syntax tree
 	stack: BTreeMap<String, usize>,
 
-	ressources: Vec<RessourcePtr>,
+	ressources: Vec<ResourcePtr>,
 	optimize: Vec<String>,
 	processes: Vec<TokenProcess>
 }
@@ -205,7 +205,7 @@ impl Parser {
 		if to_return {
 			let name = self.get_tok_content(-4);
 			let quantity = self.get_tok_content_as_usize(-2) as usize;
-			let mut res = Rc::new(RefCell::new(Ressource::new(name)));
+			let mut res = Resource::new_ptr(&name);
 			res.borrow_mut().add(quantity);
 			self.ressources.push(res);
 		}
@@ -222,10 +222,9 @@ impl Parser {
 		to_return
 	}
 
-	/// Parse the string into an equation and reduce it.
 	pub fn parse(
 		to_parse: &String
-	) -> Result<(Vec<RessourcePtr>, Vec<String>, Vec<TokenProcess>), KrpSimError> {
+	) -> Result<(Vec<ResourcePtr>, Vec<String>, Vec<TokenProcess>), KrpSimError> {
 		// init parser struct
 		let mut tokens = Parser::split_into_tokens(to_parse);
 		tokens.push(Token::new(TokenType::EndLine, "\n".to_string()));
@@ -249,25 +248,6 @@ impl Parser {
 			num_line += 1;
 		}
 		let indexi = parser.index;
-		// print!("{:?} ", parser.get_tok_content((indexi - 14) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 13) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 12) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 11) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 10) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 9) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 8) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 7) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 6) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 5) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 4) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 3) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 2) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi - 1) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi + 1) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi + 2) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi + 3) as i32));
-		// print!("{:?} ", parser.get_tok_content((indexi + 4) as i32));
 
 		// return value
 		if carry_on {
