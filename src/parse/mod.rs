@@ -1,6 +1,6 @@
 mod tokenizer;
 mod parse;
-mod fc_string;
+pub mod fc_string;
 #[cfg(test)]
 mod test_parse;
 

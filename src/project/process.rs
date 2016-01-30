@@ -1,6 +1,7 @@
 use std::collections::BTreeMap;
 
 /// Created by parsing. To be transformed to a process
+#[derive(Debug)]
 pub struct TokenProcess {
     name: String,
     needs: BTreeMap<String, usize>,

@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 pub type RessourcePtr = Rc<RefCell<Ressource>>;
 
+#[derive(Debug)]
 pub struct Ressource {
     name: String,
     quantity: usize

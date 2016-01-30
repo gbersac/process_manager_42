@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
-pub fn sub_string(model: &String, begin: usize, len: usize) -> Option<String>
-{
+pub fn sub_string(model: &String, begin: usize, len: usize) -> Option<String> {
     let mut end = begin + len;
 
     if begin > model.len(){
@@ -13,9 +12,17 @@ pub fn sub_string(model: &String, begin: usize, len: usize) -> Option<String>
     Some(String::from_str(&(model[begin..end])).unwrap() )
 }
 
+pub fn get_line(s: &str, num_line: usize) -> Option<&str> {
+    let split: Vec<&str> = s.split("\n").collect();
+    if split.len() >= num_line {
+        Some(split[num_line])
+    } else {
+        None
+    }
+}
+
 #[test]
-fn test_sub_string()
-{
+fn test_sub_string() {
     let test1 = sub_string(&"aaabbbaaa".to_string(), 3, 3).unwrap();
     println!("test1: {}", test1);
     assert_eq!(test1, "bbb");

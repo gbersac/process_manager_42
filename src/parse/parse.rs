@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 use std::cell::RefCell;
 use std::rc::Rc;
 use project::{Ressource, RessourcePtr, TokenProcess};
+use error::{KrpSimError};
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum TokenType
@@ -39,8 +40,7 @@ pub struct Parser {
 
 impl Parser {
 
-	fn split_into_tokens(to_parse: &String) -> Vec<Token<TokenType>>
-	{
+	fn split_into_tokens(to_parse: &String) -> Vec<Token<TokenType>> {
 		let token_types = vec![
 			TokenInfo::new(TokenType::OpenParenthesis, Regex::new(r"\(").unwrap()),
 			TokenInfo::new(TokenType::CloseParenthesis, Regex::new(r"\)").unwrap()),
@@ -89,11 +89,11 @@ impl Parser {
 	    found
 	}
 
-	fn get_tok_content(&mut self, index: i32) -> String {
+	fn get_tok_content(&self, index: i32) -> String {
 	    self.tokens[((self.index as i32) + index) as usize].get_content().clone()
 	}
 
-	fn get_tok_content_as_usize(&mut self, index: i32) -> usize {
+	fn get_tok_content_as_usize(&self, index: i32) -> usize {
 	    let s = self.tokens[((self.index as i32) + index) as usize].
 	    		get_content().clone();
 		s.parse::<usize>().unwrap()
@@ -102,7 +102,6 @@ impl Parser {
 	////////////////////////////////////////////////////////////////////// RULES
 
 	fn rule_optimisation(&mut self) -> bool {
-		println!("rule_optimisation");
 		let old_state = self.save_state();
 		let mut opt = Vec::new();
 		let mut to_return = self.tok_is_type(TokenType::Optimize) &&
@@ -128,13 +127,11 @@ impl Parser {
 		if to_return {
 		    self.optimize.extend_from_slice(opt.as_slice());
 		}
-		println!("rule_optimisation {:?}", opt);
 		self.restore_state(to_return, old_state);
 		to_return
 	}
 
 	fn rule_name_number(&mut self) -> bool {
-		println!("rule_name_number");
 		let old_state = self.save_state();
 		let mut to_return = self.tok_is_type(TokenType::Word) &&
 				self.tok_is_type(TokenType::Colon) &&
@@ -153,7 +150,7 @@ impl Parser {
 		let mut to_return = self.tok_is_type(TokenType::OpenParenthesis) &&
 				self.rule_name_number();
 		let mut carry_on = to_return;
-		if carry_on {
+		while carry_on {
 			carry_on = self.tok_is_type(TokenType::SemiColon) &&
 					self.rule_name_number();
 		}
@@ -164,7 +161,6 @@ impl Parser {
 	}
 
 	fn rule_process(&mut self) -> bool {
-		println!("rule_process");
 		let old_state = self.save_state();
 		let mut to_return =	self.tok_is_type(TokenType::Word);
 		if !to_return {
@@ -179,6 +175,7 @@ impl Parser {
 		    return false;
 		}
 		let needs = self.stack.clone();
+		self.stack.clear();
 		let to_return = self.tok_is_type(TokenType::Colon) &&
 				self.rule_name_number_list();
 		if !to_return {
@@ -200,7 +197,6 @@ impl Parser {
 	}
 
 	fn rule_initial_stock(&mut self) -> bool {
-		println!("rule_initial_stock");
 		let old_state = self.save_state();
 		let mut to_return =	self.tok_is_type(TokenType::Word) &&
 				self.tok_is_type(TokenType::Colon) &&
@@ -209,7 +205,7 @@ impl Parser {
 		if to_return {
 			let name = self.get_tok_content(-4);
 			let quantity = self.get_tok_content_as_usize(-2) as usize;
-			let mut res = Rc::new(RefCell::new(Ressource::new(quantity.to_string())));
+			let mut res = Rc::new(RefCell::new(Ressource::new(name)));
 			res.borrow_mut().add(quantity);
 			self.ressources.push(res);
 		}
@@ -229,7 +225,7 @@ impl Parser {
 	/// Parse the string into an equation and reduce it.
 	pub fn parse(
 		to_parse: &String
-	) -> Option<(Vec<RessourcePtr>, Vec<String>, Vec<TokenProcess>)> {
+	) -> Result<(Vec<RessourcePtr>, Vec<String>, Vec<TokenProcess>), KrpSimError> {
 		// init parser struct
 		let mut tokens = Parser::split_into_tokens(to_parse);
 		tokens.push(Token::new(TokenType::EndLine, "\n".to_string()));
@@ -244,18 +240,40 @@ impl Parser {
 
 		// test tokens against rules
 		let mut carry_on = true;
+		let mut num_line = 0;
 		while carry_on && !parser.reached_end() {
 			carry_on = parser.rule_empty_line() ||
 					parser.rule_initial_stock() ||
 					parser.rule_process() ||
 					parser.rule_optimisation();
+			num_line += 1;
 		}
+		let indexi = parser.index;
+		// print!("{:?} ", parser.get_tok_content((indexi - 14) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 13) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 12) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 11) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 10) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 9) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 8) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 7) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 6) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 5) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 4) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 3) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 2) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi - 1) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi + 1) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi + 2) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi + 3) as i32));
+		// print!("{:?} ", parser.get_tok_content((indexi + 4) as i32));
 
 		// return value
 		if carry_on {
-		    Some((parser.ressources, parser.optimize, parser.processes))
+		    Ok((parser.ressources, parser.optimize, parser.processes))
 		} else {
-		    None
+			Err(KrpSimError::ParseError(num_line))
 		}
 	}
 }
