@@ -32,9 +32,8 @@ fn main() {
 	let instructions_str = file_as_string(&file_name);
 	match parse::Parser::parse(&instructions_str) {
 	    Ok((ressources, optimize, processes)) => {
-	    	println!("optimize {:?}", optimize);
+	    	// launch process resolution
 	    	let project = Project::new(ressources, processes, optimize);
-	    	println!("project {:?}", project);
 	    },
 	    Err(e) => {
 	    	match e {

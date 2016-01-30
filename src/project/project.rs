@@ -1,12 +1,12 @@
 use std::rc::Rc;
-use project::{Resource, ResourcePtr, TokenProcess, Process};
+use project::{Resource, ResourcePtr, TokenProcess, Process, ProcessPtr};
 use std::collections::{BTreeMap};
 
 #[derive(Debug)]
 pub struct Project {
 	resources: BTreeMap<String, ResourcePtr>,
 	resources_to_optimize: Vec<ResourcePtr>,
-	processes: Vec<Process>,
+	processes: Vec<ProcessPtr>,
 	optimize_time: bool
 }
 
@@ -63,11 +63,12 @@ impl Project {
 		// transform TokenProcess into Process
 		let mut processes = Vec::new();
 		for tok in token_processes {
-		    let new_process = Process::new(
+		    let new_process = Process::new_ptr(
 		    		tok.name,
 		    		project.map_to_ressources(tok.prerequisites),
 		    		project.map_to_ressources(tok.products),
 		    		tok.time);
+		    new_process.borrow_mut().resolve_dependency(new_process.clone());
 		    processes.push(new_process);
 		}
 		project.processes = processes;
@@ -76,7 +77,10 @@ impl Project {
 		let mut resources_to_optimize = Vec::new();
 		for res in optimize {
 			match project.get_resource(&res) {
-			    Some(resptr) => resources_to_optimize.push(resptr),
+			    Some(resptr) => {
+			    	resptr.borrow_mut().set_is_optimized();
+			    	resources_to_optimize.push(resptr);
+			    },
 			    None => {
 			    	if res == "time" { /* time is a special ressource */
 			    	    project.optimize_time = true;
