@@ -1,5 +1,5 @@
 use regex::{Regex};
-use super::fc_string;
+use fn_string;
 use std::fmt::{Formatter, Error, Debug};
 
 pub struct Token<E: Clone + Debug>
@@ -78,7 +78,7 @@ impl<E: Clone + Debug> TokenInfo<E>
 			if pos.is_some(){
 				let (begin, end) = pos.unwrap();
 				if begin == 0{
-					let content = fc_string::sub_string(to_match, begin, end)
+					let content = fn_string::sub_string(to_match, begin, end)
 							.unwrap();
 					let tok = Token::new(self.token_type.clone(),
 							content.to_string());
@@ -131,7 +131,7 @@ impl<E: Clone + Debug> Tokenizer<E> {
 
 	fn reduce_to_split(&self, to_split: &String, token_len: usize) -> String
 	{
-		let reduced = fc_string::sub_string(to_split, token_len, to_split.len() - token_len)
+		let reduced = fn_string::sub_string(to_split, token_len, to_split.len() - token_len)
 				.unwrap();
 		self.discards.replace(&reduced, "")
 	}

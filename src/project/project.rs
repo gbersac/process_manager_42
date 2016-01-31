@@ -1,6 +1,9 @@
 use std::rc::Rc;
 use project::{Resource, ResourcePtr, TokenProcess, Process, ProcessPtr};
 use std::collections::{BTreeMap};
+use fn_string;
+use error::{KrpSimError};
+use parse::Parser;
 
 #[derive(Debug)]
 pub struct Project {
@@ -18,6 +21,11 @@ impl Project {
 		}
 	}
 
+	/**************************************************************************/
+	/* New Project                                                            */
+	/**************************************************************************/
+
+	/// Add resource `resource_name` if it doesn't already exist.
 	fn add_ressource(&mut self, resource_name: String) -> ResourcePtr {
 		match self.get_resource(&resource_name) {
 		    Some(res) => res,
@@ -92,5 +100,53 @@ impl Project {
 		project.resources_to_optimize = resources_to_optimize;
 
 		project
+	}
+
+	pub fn project_from_file(file_name: &str) -> Project {
+		let instructions_str = fn_string::file_as_string(file_name);
+		match Parser::parse(&instructions_str) {
+		    Ok((ressources, optimize, processes)) => {
+		    	// launch process resolution
+		    	Project::new(ressources, processes, optimize)
+		    },
+		    Err(e) => {
+		    	match e {
+		    	    KrpSimError::ParseError(line) => {
+						let line_str =
+								fn_string::get_line(&instructions_str, line - 1).unwrap();
+				    	panic!("Error parsing file {} on line {}:\n{}",
+				    			file_name, line, line_str)
+		    	    },
+		    	}
+		    },
+		}
+	}
+
+	/**************************************************************************/
+	/* Resolution                                                             */
+	/**************************************************************************/
+
+	/// Return the list of projects to execute in order to maximize the
+	/// quantity of resources to optimize (`self.resources_to_optimize`).
+	///
+	/// In the return value, each process to launch is associated with the
+	/// number of time it have to be launch.
+	pub fn processes_to_launch(&mut self) -> Vec<(ProcessPtr, usize)> {
+		unimplemented!();
+	}
+
+	pub fn new_turn(&mut self) -> bool {
+		// decrease countdown of launched processes.
+		unimplemented!();
+
+		// get new process to launch
+		let processes_to_launch = self.processes_to_launch();
+
+		// launch them
+		for (process, time) in processes_to_launch {
+		    // process.launch(time);
+		    unimplemented!();
+		}
+	    true
 	}
 }

@@ -2,21 +2,11 @@ extern crate regex;
 
 mod project;
 mod parse;
+mod fn_string;
 mod error;
 
 use std::env;
-use std::fs::File;
-use std::io::Read;
-use parse::fc_string;
-use error::{KrpSimError};
 use project::{Project};
-
-fn file_as_string(file_name: &String) -> String {
-    let mut f = File::open(file_name).unwrap();
-    let mut s = String::new();
-    f.read_to_string(&mut s);
-    s
-}
 
 fn main() {
 	// parse args
@@ -29,21 +19,5 @@ fn main() {
 	let delay = args[2].clone();
 
 	// parse instructions file
-	let instructions_str = file_as_string(&file_name);
-	match parse::Parser::parse(&instructions_str) {
-	    Ok((ressources, optimize, processes)) => {
-	    	// launch process resolution
-	    	let project = Project::new(ressources, processes, optimize);
-	    },
-	    Err(e) => {
-	    	match e {
-	    	    KrpSimError::ParseError(line) => {
-					let line_str =
-							fc_string::get_line(&instructions_str, line - 1).unwrap();
-			    	println!("Error parsing file {} on line {}:\n{}",
-			    			file_name, line, line_str);
-	    	    },
-	    	}
-	    },
-	}
+	let project = Project::project_from_file(&file_name);
 }

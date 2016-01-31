@@ -1,0 +1,15 @@
+# At the beginning, the project has choice between
+# `ProvideLongEfficient1` and `ProvideShortUnefficient`
+# Since `recycle` only cost one `ProvideLongEfficient1` and `ProvideShortUnefficient` two.
+# Since money is a resource to optimize, it have to choose `ProvideLongEfficient1` two time
+
+### Initial stock
+money:2
+
+### Process
+ProvideLongEfficient1:(money:1):(intermediate:1):1
+ProvideLongEfficient2:(intermediate:1):(final:1):1
+ProvideShortUnefficient:(money:2):(final:1):1
+
+### Resources to optimize
+optimize:(money;final)

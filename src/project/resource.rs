@@ -6,6 +6,8 @@ pub type ResourcePtr = Rc<RefCell<Resource>>;
 
 #[derive(Debug)]
 pub struct Resource {
+    /// The name is the id of the resource. Two resource can't have the same
+    /// name.
     name: String,
     quantity: usize,
     is_optimized: bool,

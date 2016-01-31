@@ -1,4 +1,6 @@
 use std::str::FromStr;
+use std::fs::File;
+use std::io::Read;
 
 pub fn sub_string(model: &String, begin: usize, len: usize) -> Option<String> {
     let mut end = begin + len;
@@ -19,6 +21,13 @@ pub fn get_line(s: &str, num_line: usize) -> Option<&str> {
     } else {
         None
     }
+}
+
+pub fn file_as_string(file_name: &str) -> String {
+    let mut f = File::open(file_name).unwrap();
+    let mut s = String::new();
+    f.read_to_string(&mut s);
+    s
 }
 
 #[test]

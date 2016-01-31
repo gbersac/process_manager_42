@@ -1,0 +1,12 @@
+# The program need to sacrifice one euro to get two
+# Is it going to be clever enough to do it ?
+
+### Initial stock
+money:1
+
+### Process
+buy:(money:1):(product:1):1
+sell:(product:1):(money:2):1
+
+### Resources to optimize
+optimize:(money)

@@ -11,9 +11,9 @@ fn test_parsability(s: &str, is_correct: bool) {
 	println!("\nFor : {:?}", s);
 	let result = Parser::parse(&s.to_string());
 	if is_correct {
-	    assert!(result.is_some());
+	    assert!(result.is_ok());
 	} else {
-	    assert!(result.is_none());
+	    assert!(result.is_err());
 	}
 }
 
@@ -30,42 +30,3 @@ fn test_parser_basics() {
     test_parsability("achat_materiel:(euro:8):(materiel:1):10:10", false);
     test_parsability("euro:10:", false);
 }
-
-// fn test_tree(s: &str, tree: Rc<Imply>) {
-//     println!("\nFor : {:?}", s);
-//     let result = Parser::parse(&s.to_string());
-//     match result {
-//         Some(expr) => {
-//             let result_tree = expr.get_instrs().get(0).unwrap();
-//             println!("tree {:?}", result_tree.get_ident());
-//             assert!(result_tree.eq(tree as Rc<Exp>));
-//         },
-//         None => panic!("The expr #{:?}# is false.", s),
-//     };
-// }
-
-// fn test_tree2(s: &str) {
-//     println!("\nFor : {:?}", s);
-//     let result = Parser::parse(&s.to_string());
-//     match result {
-//         Some(expr) => {
-//             let result_tree = expr.get_instrs().get(0).unwrap();
-//             println!("tree {:?}", result_tree.get_ident());
-//             assert!(result_tree.get_ident().unwrap() == s.to_string());
-//         },
-//         None => panic!("The expr #{:?}# is false.", s),
-//     };
-// }
-
-// #[test]
-// fn test_parse_tree() {
-//     let tree = Imply::new (
-//         Axiom::new('A') as Rc<Exp>,
-//         Axiom::new('B') as Rc<Exp>
-//     );
-//     test_tree("A => B", tree);
-
-//     test_tree2("(A|(B+C))=>D");
-//     test_tree2("((!(A)+!(B))+!(C))=>D");
-//     test_tree2("(!((A+C))|D)=>D");
-// }

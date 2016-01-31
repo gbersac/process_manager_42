@@ -1,0 +1,15 @@
+# At the beginning, the project has choice between `recycle` and `buy`
+# Since `recycle` only cost one `money` and `buy` two.
+# Since money is a resource to optimize, it have to choose `recycle`
+
+### Initial stock
+money:2
+trash:1
+
+### Process
+recycle:(money:1;trash:1):(requirement:1):1
+buy_requirement:(money:2):(requirement:1):1
+produce_final:(requirement:1):(final:1;trash:1):1
+
+### Resources to optimize
+optimize:(money;final)

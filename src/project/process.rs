@@ -56,6 +56,10 @@ pub struct Process {
 }
 
 impl Process {
+    pub fn get_name(&self) -> &String {
+        &self.name
+    }
+
     fn map_to_resqt(map: Vec<(ResourcePtr, usize)>) -> Vec<ResourceQt> {
         let mut to_return = Vec::new();
         for (key, value) in map {
