@@ -1,5 +1,6 @@
 use std::rc::Rc;
-use project::{Resource, ResourcePtr, TokenProcess, Process, ProcessPtr};
+use project::{Resource, ResourcePtr, TokenProcess, Process, ProcessPtr, ArcPtr
+		, Arc};
 use std::collections::{BTreeMap};
 use fn_string;
 use error::{KrpSimError};
@@ -71,13 +72,16 @@ impl Project {
 		// transform TokenProcess into Process
 		let mut processes = Vec::new();
 		for tok in token_processes {
-		    let new_process = Process::new_ptr(
-		    		tok.name,
-		    		project.map_to_ressources(tok.prerequisites),
-		    		project.map_to_ressources(tok.products),
-		    		tok.time);
-		    new_process.borrow_mut().resolve_dependency(new_process.clone());
-		    processes.push(new_process);
+		    let new_process = Process::new_ptr(tok.name, tok.time);
+		    processes.push(new_process.clone());
+		    for (prerequisite, number) in tok.prerequisites {
+		    	let res = project.add_ressource(prerequisite);
+		        Arc::new_pre(res, new_process.clone(), number);
+		    }
+		    for (product, number) in tok.products {
+		    	let res = project.add_ressource(product);
+		        Arc::new_post(res, new_process.clone(), number);
+		    }
 		}
 		project.processes = processes;
 

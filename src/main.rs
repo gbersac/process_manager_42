@@ -20,4 +20,5 @@ fn main() {
 
 	// parse instructions file
 	let project = Project::project_from_file(&file_name);
+	println!("{:?}", project);
 }

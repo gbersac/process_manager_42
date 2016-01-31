@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
-use project::{ProcessPtr};
+use project::{ProcessPtr, ArcPtr};
 
 pub type ResourcePtr = Rc<RefCell<Resource>>;
 
@@ -13,10 +13,10 @@ pub struct Resource {
     is_optimized: bool,
 
     /// List of process which create this resource
-    creators: Vec<ProcessPtr>,
+    creators: Vec<ArcPtr>,
 
     /// List of process which use this resource
-    consumers: Vec<ProcessPtr>
+    consumers: Vec<ArcPtr>
 }
 
 impl Resource {
@@ -50,11 +50,11 @@ impl Resource {
         self.is_optimized = true;
     }
 
-    pub fn add_creator(&mut self, creator_ptr: ProcessPtr) {
+    pub fn add_creator(&mut self, creator_ptr: ArcPtr) {
         self.creators.push(creator_ptr);
     }
 
-    pub fn add_consumer(&mut self, consumer_ptr: ProcessPtr) {
+    pub fn add_consumer(&mut self, consumer_ptr: ArcPtr) {
         self.consumers.push(consumer_ptr);
     }
 }

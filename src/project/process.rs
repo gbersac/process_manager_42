@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::collections::BTreeMap;
 use super::{ResourcePtr};
+use project::{ArcPtr};
 
 pub type ProcessPtr = Rc<RefCell<Process>>;
 
@@ -31,27 +32,10 @@ impl TokenProcess {
 }
 
 #[derive(Debug)]
-struct ResourceQt
-{
-    pub res: ResourcePtr,
-    pub quantities: usize
-}
-
-impl ResourceQt
-{
-    pub fn new(res: ResourcePtr, quantities: usize ) -> ResourceQt
-    {
-        ResourceQt {
-            res: res,
-            quantities: quantities
-        }
-    }
-}
-
 pub struct Process {
     name: String,
-    prerequisites: Vec<ResourceQt>,
-    products: Vec<ResourceQt>,
+    prerequisites: Vec<ArcPtr>,
+    products: Vec<ArcPtr>,
     time: usize
 }
 
@@ -60,62 +44,30 @@ impl Process {
         &self.name
     }
 
-    fn map_to_resqt(map: Vec<(ResourcePtr, usize)>) -> Vec<ResourceQt> {
-        let mut to_return = Vec::new();
-        for (key, value) in map {
-            to_return.push(ResourceQt::new(key, value));
-        }
-        to_return
-    }
-
     pub fn new(
         name: String,
-        prerequisites: Vec<(ResourcePtr, usize)>,
-        products: Vec<(ResourcePtr, usize)>,
         time: usize
     ) -> Process {
         Process {
             name: name,
-            prerequisites: Process::map_to_resqt(prerequisites),
-            products: Process::map_to_resqt(products),
+            prerequisites: Vec::new(),
+            products: Vec::new(),
             time: time
         }
     }
 
     pub fn new_ptr(
         name: String,
-        prerequisites: Vec<(ResourcePtr, usize)>,
-        products: Vec<(ResourcePtr, usize)>,
         time: usize
     ) -> ProcessPtr {
-        Rc::new(RefCell::new(
-                Process::new(name, prerequisites, products, time)))
+        Rc::new(RefCell::new(Process::new(name, time)))
     }
 
-    /// This function inform each of the resources it relates with
-    /// (requirements and products) of this dependencies.
-    /// The goal is to create a graph of resources/processes.
-    ///
-    /// The `self_ptr` is the `Rc` pointer to this process.
-    pub fn resolve_dependency(&mut self,
-        self_ptr: ProcessPtr
-    ) {
-        for prerequisite in self.prerequisites.iter() {
-            prerequisite.res.borrow_mut().add_consumer(self_ptr.clone());
-        }
-        for product in self.products.iter() {
-            product.res.borrow_mut().add_creator(self_ptr.clone());
-        }
+    pub fn add_prerequisite(&mut self, resource: ArcPtr) {
+        self.prerequisites.push(resource);
     }
-}
 
-use std::fmt::{Formatter, Debug, Error};
-
-impl Debug for Process
-{
-    fn fmt(&self, f: &mut Formatter) -> Result<(), Error>
-    {
-        write!(f, "{}", self.name);
-        Ok(())
+    pub fn add_product(&mut self, resource: ArcPtr) {
+        self.products.push(resource);
     }
 }
