@@ -8,18 +8,26 @@ use parse::Parser;
 
 #[derive(Debug)]
 pub struct Project {
-	resources: BTreeMap<String, ResourcePtr>,
+	resources: BTreeMap<usize, ResourcePtr>,
 	resources_to_optimize: Vec<ResourcePtr>,
-	processes: Vec<ProcessPtr>,
+	processes: BTreeMap<usize, ProcessPtr>,
+	pre_arc: Vec<ArcPtr>,
+	post_arc: Vec<ArcPtr>,
 	optimize_time: bool
 }
 
 impl Project {
-	pub fn get_resource(&self, name: &str) -> Option<ResourcePtr> {
-		match self.resources.get(name) {
-		    Some(ref expr) => Some((*expr).clone()),
-		    None => None,
+	pub fn get_resource_by_name(&self, name: &str) -> Option<ResourcePtr> {
+		for (_, ref res) in &self.resources {
+		    if name == res.borrow().get_name() {
+		    	return Some((*res).clone());
+		    }
 		}
+		None
+	}
+
+	pub fn get_resource_by_index(&self, index: usize) -> ResourcePtr {
+		self.resources.get(&index).unwrap().clone()
 	}
 
 	/**************************************************************************/
@@ -28,11 +36,12 @@ impl Project {
 
 	/// Add resource `resource_name` if it doesn't already exist.
 	fn add_ressource(&mut self, resource_name: String) -> ResourcePtr {
-		match self.get_resource(&resource_name) {
+		match self.get_resource_by_name(&resource_name) {
 		    Some(res) => res,
 		    None => {
-				let new_resource = Resource::new_ptr(&resource_name);
-				self.resources.insert(resource_name.clone(), new_resource.clone());
+		    	let index = self.resources.len();
+				let new_resource = Resource::new_ptr(&resource_name, index);
+				self.resources.insert(index, new_resource.clone());
 				new_resource
 		    }
 		}
@@ -55,32 +64,36 @@ impl Project {
 		optimize: Vec<String>
 	) -> Project {
 		// transform resources vec into a map
-		let mut map_resources: BTreeMap<String, ResourcePtr> = BTreeMap::new();
+		let mut map_resources: BTreeMap<usize, ResourcePtr> = BTreeMap::new();
 		for res in resources {
-			let res_name = res.borrow().get_name().clone();
-		    map_resources.insert(res_name, res);
+			let res_index = res.borrow().get_index().clone();
+		    map_resources.insert(res_index, res);
 		}
 
 		// create the project struct
 		let mut project = Project {
 			resources: map_resources,
 			resources_to_optimize: Vec::new(),
-			processes: Vec::new(),
+			processes: BTreeMap::new(),
+			pre_arc: Vec::new(),
+			post_arc: Vec::new(),
 			optimize_time: false
 		};
 
 		// transform TokenProcess into Process
-		let mut processes = Vec::new();
-		for tok in token_processes {
-		    let new_process = Process::new_ptr(tok.name, tok.time);
-		    processes.push(new_process.clone());
-		    for (prerequisite, number) in tok.prerequisites {
+		let mut processes = BTreeMap::new();
+		for (num, ref tok) in token_processes.iter().enumerate() {
+		    let new_process = Process::new_ptr(tok.name.clone(), tok.time, num);
+		    processes.insert(num, new_process.clone());
+		    for (prerequisite, number) in tok.prerequisites.clone() {
 		    	let res = project.add_ressource(prerequisite);
-		        Arc::new_pre(res, new_process.clone(), number);
+		        let new_arc = Arc::new_pre(res, new_process.clone(), number);
+		        project.pre_arc.push(new_arc);
 		    }
-		    for (product, number) in tok.products {
+		    for (product, number) in tok.products.clone() {
 		    	let res = project.add_ressource(product);
-		        Arc::new_post(res, new_process.clone(), number);
+		        let new_arc = Arc::new_post(res, new_process.clone(), number);
+		        project.post_arc.push(new_arc);
 		    }
 		}
 		project.processes = processes;
@@ -88,7 +101,7 @@ impl Project {
 		// transform optimize into ResourcePtr
 		let mut resources_to_optimize = Vec::new();
 		for res in optimize {
-			match project.get_resource(&res) {
+			match project.get_resource_by_name(&res) {
 			    Some(resptr) => {
 			    	resptr.borrow_mut().set_is_optimized();
 			    	resources_to_optimize.push(resptr);

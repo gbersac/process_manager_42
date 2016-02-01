@@ -36,7 +36,8 @@ pub struct Process {
     name: String,
     prerequisites: Vec<ArcPtr>,
     products: Vec<ArcPtr>,
-    time: usize
+    time: usize,
+    index: usize
 }
 
 impl Process {
@@ -46,21 +47,24 @@ impl Process {
 
     pub fn new(
         name: String,
-        time: usize
+        time: usize,
+        index: usize
     ) -> Process {
         Process {
             name: name,
             prerequisites: Vec::new(),
             products: Vec::new(),
-            time: time
+            time: time,
+            index: index
         }
     }
 
     pub fn new_ptr(
         name: String,
-        time: usize
+        time: usize,
+        index: usize
     ) -> ProcessPtr {
-        Rc::new(RefCell::new(Process::new(name, time)))
+        Rc::new(RefCell::new(Process::new(name, time, index)))
     }
 
     pub fn add_prerequisite(&mut self, resource: ArcPtr) {

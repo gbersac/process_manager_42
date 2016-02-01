@@ -11,6 +11,7 @@ pub struct Resource {
     name: String,
     quantity: usize,
     is_optimized: bool,
+    index: usize,
 
     /// List of process which create this resource
     creators: Vec<ArcPtr>,
@@ -20,22 +21,27 @@ pub struct Resource {
 }
 
 impl Resource {
-    pub fn new(name: &str) -> Resource {
+    pub fn new(name: &str, index: usize) -> Resource {
         Resource {
             name: name.to_string(),
             quantity: 0,
             is_optimized: false,
             creators: Vec::new(),
             consumers: Vec::new(),
+            index: index
         }
     }
 
-    pub fn new_ptr(name: &str) -> ResourcePtr {
-        Rc::new(RefCell::new(Resource::new(name)))
+    pub fn new_ptr(name: &str, index: usize) -> ResourcePtr {
+        Rc::new(RefCell::new(Resource::new(name, index)))
     }
 
     pub fn get_name(&self) -> &String {
         &self.name
+    }
+
+    pub fn get_index(&self) -> &usize {
+        &self.index
     }
 
     pub fn add(&mut self, quantity: usize) {

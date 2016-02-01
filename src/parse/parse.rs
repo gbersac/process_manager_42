@@ -33,7 +33,7 @@ pub struct Parser {
 	/// The stack for generating the abstract syntax tree
 	stack: BTreeMap<String, usize>,
 
-	ressources: Vec<ResourcePtr>,
+	resources: Vec<ResourcePtr>,
 	optimize: Vec<String>,
 	processes: Vec<TokenProcess>
 }
@@ -205,9 +205,9 @@ impl Parser {
 		if to_return {
 			let name = self.get_tok_content(-4);
 			let quantity = self.get_tok_content_as_usize(-2) as usize;
-			let mut res = Resource::new_ptr(&name);
+			let mut res = Resource::new_ptr(&name, self.resources.len());
 			res.borrow_mut().add(quantity);
-			self.ressources.push(res);
+			self.resources.push(res);
 		}
 		self.restore_state(to_return, old_state);
 		to_return
@@ -232,7 +232,7 @@ impl Parser {
 			index: 0,
 			tokens: tokens,
 			stack: BTreeMap::new(),
-			ressources: Vec::new(),
+			resources: Vec::new(),
 			optimize: Vec::new(),
 			processes: Vec::new()
 		};
@@ -251,7 +251,7 @@ impl Parser {
 
 		// return value
 		if carry_on {
-		    Ok((parser.ressources, parser.optimize, parser.processes))
+		    Ok((parser.resources, parser.optimize, parser.processes))
 		} else {
 			Err(KrpSimError::ParseError(num_line))
 		}
