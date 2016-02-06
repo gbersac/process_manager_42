@@ -4,6 +4,7 @@ mod project;
 mod parse;
 mod fn_string;
 mod error;
+mod matrix;
 
 use std::env;
 use project::{Project};

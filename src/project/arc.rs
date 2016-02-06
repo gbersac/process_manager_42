@@ -8,16 +8,14 @@ enum ArcType {
     Post
 }
 
-pub struct Arc
-{
+pub struct Arc {
 	process: ProcessPtr,
 	resource: ResourcePtr,
 	value: usize,
 	arc_type: ArcType
 }
 
-impl Arc
-{
+impl Arc {
 	/// Creation of an arc where the resource is a prerequisite of the process.
 	pub fn new_pre(
 		resource: ResourcePtr,
@@ -51,8 +49,19 @@ impl Arc
 		process.borrow_mut().add_product(new_arc.clone());
 		new_arc
 	}
-}
 
+    pub fn get_resource(&self) -> ResourcePtr {
+        self.resource.clone()
+    }
+
+    pub fn get_process(&self) -> ProcessPtr {
+        self.process.clone()
+    }
+
+    pub fn get_value(&self) -> usize {
+        self.value
+    }
+}
 
 use std::fmt::{Formatter, Debug, Error};
 

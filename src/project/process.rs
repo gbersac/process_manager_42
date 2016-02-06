@@ -74,4 +74,12 @@ impl Process {
     pub fn add_product(&mut self, resource: ArcPtr) {
         self.products.push(resource);
     }
+
+    pub fn get_index(&self) -> usize {
+        self.index
+    }
+
+    pub fn get_time(&self) -> usize {
+        self.time
+    }
 }

@@ -40,8 +40,8 @@ impl Resource {
         &self.name
     }
 
-    pub fn get_index(&self) -> &usize {
-        &self.index
+    pub fn get_index(&self) -> usize {
+        self.index
     }
 
     pub fn add(&mut self, quantity: usize) {

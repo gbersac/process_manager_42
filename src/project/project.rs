@@ -5,6 +5,7 @@ use std::collections::{BTreeMap};
 use fn_string;
 use error::{KrpSimError};
 use parse::Parser;
+use matrix::Matrix;
 
 #[derive(Debug)]
 pub struct Project {
@@ -143,27 +144,44 @@ impl Project {
 	/* Resolution                                                             */
 	/**************************************************************************/
 
-	/// Return the list of projects to execute in order to maximize the
-	/// quantity of resources to optimize (`self.resources_to_optimize`).
-	///
-	/// In the return value, each process to launch is associated with the
-	/// number of time it have to be launch.
-	pub fn processes_to_launch(&mut self) -> Vec<(ProcessPtr, usize)> {
-		unimplemented!();
-	}
+    /// Return a matrix[nb_process, nb_resource + 1] with
+    /// M[i_process, i_resource] set to the number of resource i_resource
+    /// required to trigger a process i_process.
+    ///
+    /// Line 0 is the line which contain the time to complete a process.
+    pub fn pre_mat(&self) -> Matrix {
+        let mut to_return = Matrix::new(self.processes.len(),
+                                        self.resources.len() + 1);
+        for (_, process) in &self.processes {
+            let i_process = process.borrow().get_index();
+            let time = process.borrow().get_time();
+            to_return.set(i_process, 0, time as i32);
+        }
+        for arc in &self.pre_arc {
+            let process = arc.get_process();
+            let i_process = process.borrow().get_index();
+            let resour = arc.get_resource();
+            let i_resource = resour.borrow().get_index();
+            let value = arc.get_value();
+            to_return.set(i_process, i_resource + 1, value as i32);
+        }
+        to_return
+    }
 
-	pub fn new_turn(&mut self) -> bool {
-		// decrease countdown of launched processes.
-		unimplemented!();
-
-		// get new process to launch
-		let processes_to_launch = self.processes_to_launch();
-
-		// launch them
-		for (process, time) in processes_to_launch {
-		    // process.launch(time);
-		    unimplemented!();
-		}
-	    true
-	}
+    /// Return a matrix[nb_process, nb_resource] with M[i_process, i_resource]
+    /// set to the number of resource i_resource produced by the process
+    /// i_process.
+    pub fn post_mat(&self) -> Matrix {
+        let mut to_return = Matrix::new(self.processes.len(),
+                                        self.resources.len());
+        for arc in &self.post_arc {
+            let process = arc.get_process();
+            let i_process = process.borrow().get_index();
+            let resour = arc.get_resource();
+            let i_resource = resour.borrow().get_index();
+            let value = arc.get_value();
+            to_return.set(i_process, i_resource, value as i32);
+        }
+        to_return
+    }
 }
