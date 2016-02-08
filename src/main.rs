@@ -5,6 +5,8 @@ mod parse;
 mod fn_string;
 mod error;
 mod matrix;
+#[cfg(test)]
+mod test_matrix;
 
 use std::env;
 use project::{Project};

@@ -31,6 +31,14 @@ impl Project {
 		self.resources.get(&index).unwrap().clone()
 	}
 
+    pub fn nb_resource(&self) -> usize {
+        self.resources.len()
+    }
+
+    pub fn nb_process(&self) -> usize {
+        self.processes.len()
+    }
+
 	/**************************************************************************/
 	/* New Project                                                            */
 	/**************************************************************************/
@@ -183,5 +191,34 @@ impl Project {
             to_return.set(i_process, i_resource, value as i32);
         }
         to_return
+    }
+
+    /// Return the number of process of index `i_process` that can be launch.
+    ///
+    /// `resources` is a vector with `resources[i]` being the number of
+    /// available resource of index `i`.
+    pub fn can_trigger_process(&self,
+        i_process: usize,
+        resources: Vec<i32>
+    ) -> usize {
+        // get the vector of prerequisite for the process i_process
+        let prerequisites = self.pre_mat().get_col(i_process);
+
+        // check if there is enough of each resource (except time)
+        let mut nb_match : usize = 0;
+        for i in 0..self.nb_resource() {
+            if prerequisites[i + 1] == 0 {
+                continue ;
+            }
+            let nb_match_i = (resources[i] / prerequisites[i + 1]) as usize;
+            if nb_match_i == 0 {
+                return 0;
+            } else if nb_match_i < nb_match {
+                nb_match = nb_match_i;
+            } else if nb_match == 0 {
+                nb_match = nb_match_i;
+            }
+        }
+        nb_match
     }
 }

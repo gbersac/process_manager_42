@@ -71,3 +71,42 @@ fn test_post_matrix() {
     println!("pre_mat: \n{:?}", pre_mat);
     assert!(expected == pre_mat);
 }
+
+fn test_one_can_trigger_process(
+    file: &str,
+    i_process: usize,
+    resources: Vec<i32>,
+    expected: usize
+) {
+    let project = Project:: project_from_file(file);
+    println!("project {:?}", project);
+    let result = project.can_trigger_process(i_process, resources);
+    println!("expected {} found {}", expected, result);
+    assert!(result == expected);
+}
+
+#[test]
+fn test_can_trigger_process_simple() {
+    test_one_can_trigger_process("inputs/simple", 0,
+            vec![80, 0, 0, 0], 10);
+    test_one_can_trigger_process("inputs/simple", 0,
+            vec![0, 9, 9, 9], 0);
+    test_one_can_trigger_process("inputs/simple", 0,
+            vec![9, 9, 9, 9], 1);
+}
+
+#[test]
+fn test_can_trigger_process_pomme() {
+    test_one_can_trigger_process("inputs/pomme", 7,
+            vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+			0);
+    test_one_can_trigger_process("inputs/pomme", 7,
+            vec![0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+			1);
+    test_one_can_trigger_process("inputs/pomme", 7,
+            vec![0, 0, 0, 0, 0, 0, 0, 0, 7, 1, 0, 0, 0, 0, 0, 0],
+			1);
+    test_one_can_trigger_process("inputs/pomme", 7,
+            vec![0, 0, 0, 0, 0, 0, 0, 0, 3, 5, 0, 0, 0, 0, 0, 0],
+			3);
+}

@@ -48,6 +48,16 @@ impl Matrix {
         }
         to_return
     }
+
+    /// Return the column of index `i_col`.
+    pub fn get_col(&self, i_col: usize) -> Vec<i32> {
+        let mut to_return = Vec::with_capacity(self.height);
+        for i in 0..self.height {
+            let value = self.cases[i * self.width + i_col];
+            to_return.push(value);
+        }
+        to_return
+    }
 }
 
 use std::fmt::{Formatter, Debug, Error};
