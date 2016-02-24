@@ -24,15 +24,11 @@ impl ResourceList {
 		i_process: usize,
 		nb_process: usize
 	) -> ResourceList {
-		println!("{:?}", project);
-		println!("i_process {:?} nb_process {:?}", i_process, nb_process);
 		let mut new_list = self.list.clone();
 		let process = project.get_process_by_index(i_process).clone();
 		let pre_vec = process.borrow().get_pre_vec().clone();
-		println!("pre_vec {:?}", pre_vec);
 		for i in 1..project.nb_resource() {
 			let res_consumed = pre_vec[i];
-			println!("i {} => {:?} - {:?}", i, new_list[i], res_consumed * nb_process);
 			new_list[i] -= res_consumed * nb_process;
 		}
 		new_list[0] += pre_vec[0] * nb_process;
@@ -53,5 +49,16 @@ impl ResourceList {
 
 	pub fn time_consumed(&self) -> usize {
 	    self.list[0]
+	}
+}
+
+use std::fmt::{Formatter, Display, Error};
+
+impl Display for ResourceList
+{
+	fn fmt(&self, f: &mut Formatter) -> Result<(), Error>
+	{
+		write!(f, "{:?}", self.list);
+		Ok(())
 	}
 }

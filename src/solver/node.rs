@@ -43,7 +43,7 @@ impl Node {
 	fn child_from_process(&self,
 		project: ProjectPtr,
 		processes_ready: Vec<(usize, usize)>
-	) -> (i32, Node) {
+	) -> (i32, NodePtr) {
 		println!("child_from_process");
 		processes_ready.iter().map(|&(i_process, nb_process)| {
 			println!("child_from_process inner {}", i_process);
@@ -56,7 +56,7 @@ impl Node {
 	}
 
 	/// Return the best child after a new turn has been passed
-	fn child_from_new_turn(&self, project: ProjectPtr) -> (i32, Node) {
+	fn child_from_new_turn(&self, project: ProjectPtr) -> (i32, NodePtr) {
 		let mut new_time = self.time;
 		let mut processes_to_end = self.processes_to_end.clone();
 		loop {
@@ -64,7 +64,7 @@ impl Node {
 
 			// check for end of simulation
 			if new_time >= project.get_delay() {
-			    return (self.compute_weight(project), self.clone());
+			    return (self.compute_weight(project), Rc::new(self.clone()));
 			}
 			println!("processes_to_end {:?}", processes_to_end);
 
@@ -88,7 +88,7 @@ impl Node {
 		time: usize,
 		resources: ResourceList,
 		processes_to_end: EndProcessStack
-	) -> (i32, Node) {
+	) -> (i32, NodePtr) {
 		let mut new_node = Node {
 			time: time,
 			child: None,
@@ -99,7 +99,7 @@ impl Node {
 
 		// check for end of simulation
 		if new_node.time >= project.get_delay() {
-		    return (new_node.compute_weight(project), new_node);
+		    return (new_node.compute_weight(project), Rc::new(new_node));
 		}
 
 		// create all the possible child and select the best one
@@ -112,12 +112,12 @@ impl Node {
 			println!("la");
 		    new_node.child_from_new_turn(project.clone())
 		};
-		new_node.child = Some(Rc::new(child));
-		(weight, new_node)
+		new_node.child = Some(child);
+		(weight, Rc::new(new_node))
 	}
 
 	/// Create the root of the tree and all its childs.
-	pub fn launch_node_tree(project: ProjectPtr) -> (i32, Node) {
+	pub fn launch_node_tree(project: ProjectPtr) -> (i32, NodePtr) {
 		let end_process_stack = EndProcessStack::new(project.clone());
 		let resource_list = ResourceList::new(project.begin_resources());
 		Node::new(project, 1, resource_list, end_process_stack)
@@ -135,5 +135,20 @@ impl Node {
 		    to_return -= self.resources.time_consumed() as i32;
 		}
 		to_return
+	}
+
+	pub fn get_child(&self) -> Option<NodePtr> {
+	    self.child.clone()
+	}
+}
+
+use std::fmt::{Formatter, Display, Error};
+
+impl Display for Node
+{
+	fn fmt(&self, f: &mut Formatter) -> Result<(), Error>
+	{
+		write!(f, "{} -> {}", self.time, self.resources);
+		Ok(())
 	}
 }
