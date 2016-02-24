@@ -1,9 +1,11 @@
 use project::{ProjectPtr};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ResourceList {
 	/// A list of size nb_resource with list[i] = number of resource which
 	/// index is i.
+	///
+	/// Resource of index 0 is time
 	list: Vec<usize>,
 }
 
@@ -22,13 +24,18 @@ impl ResourceList {
 		i_process: usize,
 		nb_process: usize
 	) -> ResourceList {
+		println!("{:?}", project);
+		println!("i_process {:?} nb_process {:?}", i_process, nb_process);
 		let mut new_list = self.list.clone();
 		let process = project.get_process_by_index(i_process).clone();
 		let pre_vec = process.borrow().get_pre_vec().clone();
+		println!("pre_vec {:?}", pre_vec);
 		for i in 1..project.nb_resource() {
-			let res_consumed = pre_vec[i + 1];
+			let res_consumed = pre_vec[i];
+			println!("i {} => {:?} - {:?}", i, new_list[i], res_consumed * nb_process);
 			new_list[i] -= res_consumed * nb_process;
 		}
+		new_list[0] += pre_vec[0] * nb_process;
 		ResourceList::new(new_list)
 	}
 
@@ -38,5 +45,13 @@ impl ResourceList {
 
 	pub fn add_resource(&mut self, i_resource: usize, value: usize) {
 		self.list[i_resource] += value;
+	}
+
+	pub fn nb_resource(&self, i_resource: usize) -> usize {
+	    self.list[i_resource]
+	}
+
+	pub fn time_consumed(&self) -> usize {
+	    self.list[0]
 	}
 }

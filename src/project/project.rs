@@ -46,16 +46,24 @@ impl Project {
         self.processes.len()
     }
 
+    pub fn get_resources_to_optimize(&self) -> &Vec<ResourcePtr> {
+        &self.resources_to_optimize
+    }
+
+    pub fn optimize_time(&self) -> bool {
+        self.optimize_time
+    }
+
     /// Return a list of all the resources available at the begin of the
     /// simulation.
     pub fn begin_resources(&self) -> Vec<usize> {
     	let mut to_return = Vec::with_capacity(self.nb_resource() + 1);
     	to_return.push(0);
-    	for i in 1..self.nb_resource() + 1 {
-	    	unimplemented!()
-    	    // to_return.push(self.resources[i - 1] /* get initial qt */);
+    	for i in 0..self.nb_resource() {
+    		let resource = self.resources[&i].clone();
+    	    to_return.push(resource.borrow().get_begin_quantity());
     	}
-    	unimplemented!();
+    	to_return
     }
 
 	/**************************************************************************/
@@ -139,8 +147,9 @@ impl Project {
 			    None => {
 			    	if res == "time" { /* time is a special ressource */
 			    	    project.optimize_time = true;
+			    	} else {
+				    	println!("Unknow resource to optimize {:?}", res);
 			    	}
-			    	println!("Unknow ressource to optimize {:?}", res);
 			    },
 			}
 		}
@@ -155,7 +164,7 @@ impl Project {
 		project
 	}
 
-	pub fn project_from_file(file_name: &str, delay: usize) -> Project {
+	pub fn from_file(file_name: &str, delay: usize) -> Project {
 		let instructions_str = fn_string::file_as_string(file_name);
 		match Parser::parse(&instructions_str) {
 		    Ok((ressources, optimize, processes)) => {
@@ -185,51 +194,6 @@ impl Project {
 	    self.delay
 	}
 
-	/**************************************************************************/
-	/* Resolution                                                             */
-	/**************************************************************************/
-
-    /// Return a matrix[nb_process, nb_resource + 1] with
-    /// M[i_process, i_resource] set to the number of resource i_resource
-    /// required to trigger a process i_process.
-    ///
-    /// Line 0 is the line which contain the time to complete a process.
-    pub fn pre_mat(&self) -> Matrix {
-        let mut to_return = Matrix::new(self.processes.len(),
-                                        self.resources.len() + 1);
-        for (_, process) in &self.processes {
-            let i_process = process.borrow().get_index();
-            let time = process.borrow().get_time();
-            to_return.set(i_process, 0, time as i32);
-        }
-        for arc in &self.pre_arc {
-            let process = arc.get_process();
-            let i_process = process.borrow().get_index();
-            let resour = arc.get_resource();
-            let i_resource = resour.borrow().get_index();
-            let value = arc.get_value();
-            to_return.set(i_process, i_resource + 1, value as i32);
-        }
-        to_return
-    }
-
-    /// Return a matrix[nb_process, nb_resource] with M[i_process, i_resource]
-    /// set to the number of resource i_resource produced by the process
-    /// i_process.
-    pub fn post_mat(&self) -> Matrix {
-        let mut to_return = Matrix::new(self.processes.len(),
-                                        self.resources.len());
-        for arc in &self.post_arc {
-            let process = arc.get_process();
-            let i_process = process.borrow().get_index();
-            let resour = arc.get_resource();
-            let i_resource = resour.borrow().get_index();
-            let value = arc.get_value();
-            to_return.set(i_process, i_resource, value as i32);
-        }
-        to_return
-    }
-
     /// Return the number of process of index `i_process` that can be launch.
     ///
     /// `resources` is a vector with `resources[i]` being the number of
@@ -239,15 +203,16 @@ impl Project {
         resources: &Vec<usize>
     ) -> usize {
         // get the vector of prerequisite for the process i_process
-        let prerequisites = self.pre_mat().get_col(i_process);
+        let process = self.get_process_by_index(i_process).clone();
+        let prerequisites = process.borrow().get_pre_vec().clone();
 
         // check if there is enough of each resource (except time)
         let mut nb_match: usize = 0;
-        for i in 0..self.nb_resource() {
-            if prerequisites[i + 1] == 0 {
+        for i in 1..self.nb_resource() {
+            if prerequisites[i] == 0 {
                 continue ;
             }
-            let nb_match_i = resources[i] / prerequisites[i + 1] as usize;
+            let nb_match_i = resources[i] / prerequisites[i] as usize;
             if nb_match_i == 0 {
                 return 0;
             } else if nb_match_i < nb_match {

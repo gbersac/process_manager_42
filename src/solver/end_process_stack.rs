@@ -30,7 +30,7 @@ impl EndProcessStack {
 			nb_process: project.nb_process(),
 			max_process_time: project.get_max_process_time()
 		};
-		for i in 0..to_return.max_process_time {
+		for _ in 0..to_return.max_process_time {
 			to_return.push_zeroed_vector();
 		}
 		to_return
@@ -86,3 +86,4 @@ impl EndProcessStack {
 		to_return
 	}
 }
+

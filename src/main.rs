@@ -27,7 +27,7 @@ fn main() {
 	let file_name = args[1].clone();
 	match args[2].parse::<usize>() {
 	    Ok(delay) => {
-			let project = Rc::new(Project::project_from_file(&file_name, delay));
+			let project = Rc::new(Project::from_file(&file_name, delay));
 			solver::solve(project.clone());
 			println!("{:?}", project);
 	    },

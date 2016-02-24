@@ -44,7 +44,9 @@ impl Node {
 		project: ProjectPtr,
 		processes_ready: Vec<(usize, usize)>
 	) -> (i32, Node) {
+		println!("child_from_process");
 		processes_ready.iter().map(|&(i_process, nb_process)| {
+			println!("child_from_process inner {}", i_process);
 			let resources = self.resources
 					.launch_process(project.clone(), i_process, nb_process);
 			let processes_to_end = self.processes_to_end
@@ -56,14 +58,15 @@ impl Node {
 	/// Return the best child after a new turn has been passed
 	fn child_from_new_turn(&self, project: ProjectPtr) -> (i32, Node) {
 		let mut new_time = self.time;
+		let mut processes_to_end = self.processes_to_end.clone();
 		loop {
 			new_time += 1;
 
 			// check for end of simulation
-			if new_time == project.get_delay() {
+			if new_time >= project.get_delay() {
 			    return (self.compute_weight(project), self.clone());
 			}
-			let mut processes_to_end = self.processes_to_end.clone();
+			println!("processes_to_end {:?}", processes_to_end);
 
 			// check if something happen in the turn
 			if !processes_to_end.process_terminate_at_next_turn() {
@@ -74,12 +77,13 @@ impl Node {
 			// at least one process terminate, create new node
 			let mut resource = processes_to_end
 					.pop_and_terminate(project.clone(), &self.resources);
+			println!("pop_and_terminate {:?}", resource);
 			return Node::new(project.clone(), new_time, resource,
 					processes_to_end);
 		}
 	}
 
-	fn new(
+	pub fn new(
 		project: ProjectPtr,
 		time: usize,
 		resources: ResourceList,
@@ -91,12 +95,21 @@ impl Node {
 			resources: resources,
 			processes_to_end: processes_to_end
 		};
+		println!("new {:?}", new_node);
+
+		// check for end of simulation
+		if new_node.time >= project.get_delay() {
+		    return (new_node.compute_weight(project), new_node);
+		}
 
 		// create all the possible child and select the best one
 		let processes_ready = new_node.processes_ready(project.clone());
-		let (weight, child) = if processes_ready.len() == 0 {
+		println!("processes_ready {:?}", processes_ready);
+		let (weight, child) = if processes_ready.len() > 0 {
+			println!("ici");
 			new_node.child_from_process(project.clone(), processes_ready)
 		} else {
+			println!("la");
 		    new_node.child_from_new_turn(project.clone())
 		};
 		new_node.child = Some(Rc::new(child));
@@ -112,7 +125,15 @@ impl Node {
 
 	/// Return how much this node produced according to the project resources
 	/// to optimize.
-	pub fn compute_weight(&self, project: ProjectPtr) -> i32 {
-	    unimplemented!();
+	fn compute_weight(&self, project: ProjectPtr) -> i32 {
+		let mut to_return: i32 = 0;
+		for res in project.get_resources_to_optimize() {
+			let i_resource = (*res).borrow().get_index();
+			to_return += self.resources.nb_resource(i_resource) as i32;
+		}
+		if project.optimize_time() {
+		    to_return -= self.resources.time_consumed() as i32;
+		}
+		to_return
 	}
 }

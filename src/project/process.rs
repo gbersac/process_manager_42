@@ -113,13 +113,13 @@ impl Process {
 
         // init post_vec
         let post_vec_len = nb_resource;
-        self.pre_vec = std::iter::repeat(0).take(post_vec_len)
+        self.post_vec = std::iter::repeat(0).take(post_vec_len)
                 .collect::<Vec<usize>>();
         for post in &self.products {
             let resource = post.get_resource().clone();
             let i_res = resource.borrow().get_index();
             let nb_resource = post.get_value();
-            self.pre_vec[i_res] = nb_resource;
+            self.post_vec[i_res] = nb_resource;
         }
     }
 

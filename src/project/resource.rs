@@ -42,6 +42,10 @@ impl Resource {
         &self.name
     }
 
+    pub fn get_begin_quantity(&self) -> usize {
+        self.begin_quantity
+    }
+
     pub fn get_index(&self) -> usize {
         self.index
     }
