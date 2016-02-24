@@ -3,6 +3,7 @@ use std::rc::Rc;
 use std::collections::BTreeMap;
 use super::{ResourcePtr};
 use project::{ArcPtr};
+use std;
 
 pub type ProcessPtr = Rc<RefCell<Process>>;
 
@@ -37,7 +38,17 @@ pub struct Process {
     prerequisites: Vec<ArcPtr>,
     products: Vec<ArcPtr>,
     time: usize,
-    index: usize
+    index: usize,
+
+    /// A vector with pre_vec[i] = number of resource of index i required to
+    /// launch a new process. Set to none if uninitialized.
+    ///
+    /// pre_vec[0] is the time required to launch a process
+    pre_vec: Vec<usize>,
+
+    /// A vector with pre_vec[i] = number of resource of index i created by
+    /// this process. Set to none if uninitialized.
+    post_vec: Vec<usize>
 }
 
 impl Process {
@@ -55,7 +66,9 @@ impl Process {
             prerequisites: Vec::new(),
             products: Vec::new(),
             time: time,
-            index: index
+            index: index,
+            post_vec: Vec::new(),
+            pre_vec: Vec::new()
         }
     }
 
@@ -81,5 +94,40 @@ impl Process {
 
     pub fn get_time(&self) -> usize {
         self.time
+    }
+
+    /// Have to be launch every time a prerequisites/products has been
+    /// changed/added.
+    pub fn init_resources_vec(&mut self, nb_resource: usize) {
+        // init pre_vec
+        let pre_vec_len = nb_resource + 1;
+        self.pre_vec = std::iter::repeat(0).take(pre_vec_len)
+                .collect::<Vec<usize>>();
+        self.pre_vec[0] = self.time;
+        for pre in &self.prerequisites {
+            let resource = pre.get_resource().clone();
+            let i_res = resource.borrow().get_index() + 1;
+            let nb_resource = pre.get_value();
+            self.pre_vec[i_res] = nb_resource;
+        }
+
+        // init post_vec
+        let post_vec_len = nb_resource;
+        self.pre_vec = std::iter::repeat(0).take(post_vec_len)
+                .collect::<Vec<usize>>();
+        for post in &self.products {
+            let resource = post.get_resource().clone();
+            let i_res = resource.borrow().get_index();
+            let nb_resource = post.get_value();
+            self.pre_vec[i_res] = nb_resource;
+        }
+    }
+
+    pub fn get_pre_vec(&self) -> &Vec<usize> {
+        &self.pre_vec
+    }
+
+    pub fn get_post_vec(&self) -> &Vec<usize> {
+        &self.post_vec
     }
 }

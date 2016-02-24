@@ -125,7 +125,7 @@ impl Parser {
 				self.tok_is_type(TokenType::CloseParenthesis) &&
 				self.tok_is_type(TokenType::EndLine);
 		if to_return {
-		    self.optimize.extend_from_slice(opt.as_slice());
+		    self.optimize.append(&mut opt);
 		}
 		self.restore_state(to_return, old_state);
 		to_return

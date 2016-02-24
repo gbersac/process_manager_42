@@ -1,4 +1,11 @@
 mod node;
-mod solver;
+mod end_process_stack;
+mod resource_list;
 
-pub use self::solver::Solver;
+use std::rc::Rc;
+use project::{Project};
+pub use self::node::{Node};
+
+pub fn solve(project: Rc<Project>) -> Vec<Node> {
+	unimplemented!()
+}

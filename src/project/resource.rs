@@ -9,7 +9,9 @@ pub struct Resource {
     /// The name is the id of the resource. Two resource can't have the same
     /// name.
     name: String,
-    quantity: usize,
+
+    /// Quantity of this resource at the beginning of the simulation
+    begin_quantity: usize,
     is_optimized: bool,
     index: usize,
 
@@ -24,7 +26,7 @@ impl Resource {
     pub fn new(name: &str, index: usize) -> Resource {
         Resource {
             name: name.to_string(),
-            quantity: 0,
+            begin_quantity: 0,
             is_optimized: false,
             creators: Vec::new(),
             consumers: Vec::new(),
@@ -44,8 +46,8 @@ impl Resource {
         self.index
     }
 
-    pub fn add(&mut self, quantity: usize) {
-        self.quantity += quantity;
+    pub fn add(&mut self, begin_quantity: usize) {
+        self.begin_quantity += begin_quantity;
     }
 
     pub fn is_optimized(&self) -> bool {

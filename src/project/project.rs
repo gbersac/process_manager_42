@@ -6,6 +6,9 @@ use fn_string;
 use error::{KrpSimError};
 use parse::Parser;
 use matrix::Matrix;
+use std::borrow::BorrowMut;
+
+pub type ProjectPtr = Rc<Project>;
 
 #[derive(Debug)]
 pub struct Project {
@@ -14,7 +17,8 @@ pub struct Project {
 	processes: BTreeMap<usize, ProcessPtr>,
 	pre_arc: Vec<ArcPtr>,
 	post_arc: Vec<ArcPtr>,
-	optimize_time: bool
+	optimize_time: bool,
+	delay: usize
 }
 
 impl Project {
@@ -28,15 +32,30 @@ impl Project {
 	}
 
 	pub fn get_resource_by_index(&self, index: usize) -> ResourcePtr {
-		self.resources.get(&index).unwrap().clone()
+		self.resources[&index].clone()
 	}
 
+	pub fn get_process_by_index(&self, index: usize) -> ProcessPtr {
+		self.processes[&index].clone()
+	}
     pub fn nb_resource(&self) -> usize {
         self.resources.len()
     }
 
     pub fn nb_process(&self) -> usize {
         self.processes.len()
+    }
+
+    /// Return a list of all the resources available at the begin of the
+    /// simulation.
+    pub fn begin_resources(&self) -> Vec<usize> {
+    	let mut to_return = Vec::with_capacity(self.nb_resource() + 1);
+    	to_return.push(0);
+    	for i in 1..self.nb_resource() + 1 {
+	    	unimplemented!()
+    	    // to_return.push(self.resources[i - 1] /* get initial qt */);
+    	}
+    	unimplemented!();
     }
 
 	/**************************************************************************/
@@ -70,7 +89,8 @@ impl Project {
 	pub fn new(
 		resources: Vec<ResourcePtr>,
 		token_processes: Vec<TokenProcess>,
-		optimize: Vec<String>
+		optimize: Vec<String>,
+		delay: usize
 	) -> Project {
 		// transform resources vec into a map
 		let mut map_resources: BTreeMap<usize, ResourcePtr> = BTreeMap::new();
@@ -86,7 +106,8 @@ impl Project {
 			processes: BTreeMap::new(),
 			pre_arc: Vec::new(),
 			post_arc: Vec::new(),
-			optimize_time: false
+			optimize_time: false,
+			delay: delay
 		};
 
 		// transform TokenProcess into Process
@@ -111,9 +132,9 @@ impl Project {
 		let mut resources_to_optimize = Vec::new();
 		for res in optimize {
 			match project.get_resource_by_name(&res) {
-			    Some(resptr) => {
-			    	resptr.borrow_mut().set_is_optimized();
-			    	resources_to_optimize.push(resptr);
+			    Some(resource) => {
+			    	(*resource).borrow_mut().set_is_optimized();
+			    	resources_to_optimize.push(resource.clone());
 			    },
 			    None => {
 			    	if res == "time" { /* time is a special ressource */
@@ -125,15 +146,21 @@ impl Project {
 		}
 		project.resources_to_optimize = resources_to_optimize;
 
+		// initialize resource vec in processes
+		let nb_resource = project.nb_resource();
+		for (_, p) in &project.processes {
+		    (**p).borrow_mut().init_resources_vec(nb_resource);
+		}
+
 		project
 	}
 
-	pub fn project_from_file(file_name: &str) -> Project {
+	pub fn project_from_file(file_name: &str, delay: usize) -> Project {
 		let instructions_str = fn_string::file_as_string(file_name);
 		match Parser::parse(&instructions_str) {
 		    Ok((ressources, optimize, processes)) => {
 		    	// launch process resolution
-		    	Project::new(ressources, processes, optimize)
+		    	Project::new(ressources, processes, optimize, delay)
 		    },
 		    Err(e) => {
 		    	match e {
@@ -146,6 +173,16 @@ impl Project {
 		    	}
 		    },
 		}
+	}
+
+	/// Return the maximum of time a process take to be executed.
+	pub fn get_max_process_time(&self) -> usize {
+	    self.processes.iter().map(|(_, p)| (*p).borrow()
+	    		.get_time()).max().unwrap()
+	}
+
+	pub fn get_delay(&self) -> usize {
+	    self.delay
 	}
 
 	/**************************************************************************/
@@ -199,18 +236,18 @@ impl Project {
     /// available resource of index `i`.
     pub fn can_trigger_process(&self,
         i_process: usize,
-        resources: Vec<i32>
+        resources: &Vec<usize>
     ) -> usize {
         // get the vector of prerequisite for the process i_process
         let prerequisites = self.pre_mat().get_col(i_process);
 
         // check if there is enough of each resource (except time)
-        let mut nb_match : usize = 0;
+        let mut nb_match: usize = 0;
         for i in 0..self.nb_resource() {
             if prerequisites[i + 1] == 0 {
                 continue ;
             }
-            let nb_match_i = (resources[i] / prerequisites[i + 1]) as usize;
+            let nb_match_i = resources[i] / prerequisites[i + 1] as usize;
             if nb_match_i == 0 {
                 return 0;
             } else if nb_match_i < nb_match {
