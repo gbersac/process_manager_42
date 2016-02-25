@@ -40,7 +40,7 @@ impl ResourceList {
 	}
 
 	pub fn add_resource(&mut self, i_resource: usize, value: usize) {
-		self.list[i_resource] += value;
+		self.list[i_resource + 1] += value;
 	}
 
 	pub fn nb_resource(&self, i_resource: usize) -> usize {
@@ -54,10 +54,8 @@ impl ResourceList {
 
 use std::fmt::{Formatter, Display, Error};
 
-impl Display for ResourceList
-{
-	fn fmt(&self, f: &mut Formatter) -> Result<(), Error>
-	{
+impl Display for ResourceList {
+	fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
 		write!(f, "{:?}", self.list);
 		Ok(())
 	}

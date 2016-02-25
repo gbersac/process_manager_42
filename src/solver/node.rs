@@ -44,9 +44,7 @@ impl Node {
 		project: ProjectPtr,
 		processes_ready: Vec<(usize, usize)>
 	) -> (i32, NodePtr) {
-		println!("child_from_process");
 		processes_ready.iter().map(|&(i_process, nb_process)| {
-			println!("child_from_process inner {}", i_process);
 			let resources = self.resources
 					.launch_process(project.clone(), i_process, nb_process);
 			let processes_to_end = self.processes_to_end
@@ -66,7 +64,6 @@ impl Node {
 			if new_time >= project.get_delay() {
 			    return (self.compute_weight(project), Rc::new(self.clone()));
 			}
-			println!("processes_to_end {:?}", processes_to_end);
 
 			// check if something happen in the turn
 			if !processes_to_end.process_terminate_at_next_turn() {
@@ -77,7 +74,6 @@ impl Node {
 			// at least one process terminate, create new node
 			let mut resource = processes_to_end
 					.pop_and_terminate(project.clone(), &self.resources);
-			println!("pop_and_terminate {:?}", resource);
 			return Node::new(project.clone(), new_time, resource,
 					processes_to_end);
 		}
@@ -95,7 +91,6 @@ impl Node {
 			resources: resources,
 			processes_to_end: processes_to_end
 		};
-		println!("new {:?}", new_node);
 
 		// check for end of simulation
 		if new_node.time >= project.get_delay() {
@@ -104,12 +99,9 @@ impl Node {
 
 		// create all the possible child and select the best one
 		let processes_ready = new_node.processes_ready(project.clone());
-		println!("processes_ready {:?}", processes_ready);
 		let (weight, child) = if processes_ready.len() > 0 {
-			println!("ici");
 			new_node.child_from_process(project.clone(), processes_ready)
 		} else {
-			println!("la");
 		    new_node.child_from_new_turn(project.clone())
 		};
 		new_node.child = Some(child);
@@ -144,10 +136,8 @@ impl Node {
 
 use std::fmt::{Formatter, Display, Error};
 
-impl Display for Node
-{
-	fn fmt(&self, f: &mut Formatter) -> Result<(), Error>
-	{
+impl Display for Node {
+	fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
 		write!(f, "{} -> {}", self.time, self.resources);
 		Ok(())
 	}

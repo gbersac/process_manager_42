@@ -35,6 +35,15 @@ impl Project {
 		self.resources[&index].clone()
 	}
 
+	pub fn get_process_by_name(&self, name: &str) -> Option<ProcessPtr> {
+		for (_, ref process) in &self.processes {
+		    if name == process.borrow().get_name() {
+		    	return Some((*process).clone());
+		    }
+		}
+		None
+	}
+
 	pub fn get_process_by_index(&self, index: usize) -> ProcessPtr {
 		self.processes[&index].clone()
 	}
