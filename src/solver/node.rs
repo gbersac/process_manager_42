@@ -44,11 +44,16 @@ impl Node {
 		project: ProjectPtr,
 		processes_ready: Vec<(usize, usize)>
 	) -> (i32, NodePtr) {
-		processes_ready.iter().map(|&(i_process, _)| {
+		processes_ready.iter().map(|&(i_process, nb_process)| {
 			let resources = self.resources
 					.launch_process(project.clone(), i_process, 1);
-			let processes_to_end = self.processes_to_end
-					.add_processes(project.clone(), i_process, 1);
+			let processes_to_end = if nb_process == 1 {
+				self.processes_to_end
+						.add_processes(project.clone(), i_process, nb_process)
+			} else {
+				self.processes_to_end
+						.add_processes(project.clone(), i_process, 1)
+			};
 			Node::new(project.clone(), self.time, resources, processes_to_end)
 		}).max_by_key(|&(weight, _)| weight).unwrap()
 	}
@@ -62,8 +67,6 @@ impl Node {
 
 			// check for end of simulation
 			if new_time >= project.get_delay() {
-				println!("end {:?} -> {}", self.resources,
-						self.compute_weight(project.clone()));
 			    return (self.compute_weight(project), Rc::new(self.clone()));
 			}
 
