@@ -44,11 +44,11 @@ impl Node {
 		project: ProjectPtr,
 		processes_ready: Vec<(usize, usize)>
 	) -> (i32, NodePtr) {
-		processes_ready.iter().map(|&(i_process, nb_process)| {
+		processes_ready.iter().map(|&(i_process, _)| {
 			let resources = self.resources
-					.launch_process(project.clone(), i_process, nb_process);
+					.launch_process(project.clone(), i_process, 1);
 			let processes_to_end = self.processes_to_end
-					.add_processes(project.clone(), i_process, nb_process);
+					.add_processes(project.clone(), i_process, 1);
 			Node::new(project.clone(), self.time, resources, processes_to_end)
 		}).max_by_key(|&(weight, _)| weight).unwrap()
 	}

@@ -30,7 +30,7 @@ impl EndProcessStack {
 			nb_process: project.nb_process(),
 			max_process_time: project.get_max_process_time()
 		};
-		for _ in 0..to_return.max_process_time + 1 {
+		for _ in 0..to_return.max_process_time + 3 {
 			to_return.push_zeroed_vector();
 		}
 		to_return
@@ -44,7 +44,7 @@ impl EndProcessStack {
 		let mut to_return = self.clone();
 		let process = project.get_process_by_index(i_process);
 		let time = process.borrow().get_time();
-		to_return.processes_to_end[time - 1][i_process] = nb_process;
+		to_return.processes_to_end[time - 1][i_process] += nb_process;
 		to_return
 	}
 
