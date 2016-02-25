@@ -44,7 +44,7 @@ impl ResourceList {
 	}
 
 	pub fn nb_resource(&self, i_resource: usize) -> usize {
-	    self.list[i_resource]
+	    self.list[i_resource + 1]
 	}
 
 	pub fn time_consumed(&self) -> usize {

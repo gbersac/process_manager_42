@@ -62,6 +62,8 @@ impl Node {
 
 			// check for end of simulation
 			if new_time >= project.get_delay() {
+				println!("end {:?} -> {}", self.resources,
+						self.compute_weight(project.clone()));
 			    return (self.compute_weight(project), Rc::new(self.clone()));
 			}
 

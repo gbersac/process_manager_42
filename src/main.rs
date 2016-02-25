@@ -40,6 +40,7 @@ fn main() {
 	    Ok(delay) => {
 			let project = Rc::new(Project::from_file(&file_name, delay));
 			let (weight, solution) = solver::solve(project.clone());
+			println!("weight {}", weight);
 			print_solution(Some(solution));
 	    },
 	    Err(_) => usage(args[0].clone()),
