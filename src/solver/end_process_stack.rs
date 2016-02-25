@@ -1,39 +1,57 @@
+use std::collections::BinaryHeap;
 use project::ProjectPtr;
 use solver::resource_list::ResourceList;
 use std;
+use std::cmp::Ordering;
+
+const TIME_TO_TERMINATE: usize = 0;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ProcessEnd {
+    pub time: usize,
+
+    /// Index of the process to terminate
+    pub index: usize,
+
+    /// Number of process to terminate
+    pub number: usize,
+}
+
+impl ProcessEnd {
+    pub fn new(time: usize, index: usize, number: usize) -> ProcessEnd {
+        ProcessEnd {
+            time: time,
+            index: index,
+            number: number,
+        }
+    }
+
+    pub fn decrement(&mut self) {
+        self.time -= 1;
+    }
+}
+
+impl Ord for ProcessEnd {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.time.cmp(&other.time).reverse()
+    }
+}
+
+impl PartialOrd for ProcessEnd {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.time.cmp(&other.time).reverse())
+    }
+}
 
 /// List of all the process which are going to end in the future.
 #[derive(Debug, Clone)]
 pub struct EndProcessStack {
-    max_process_time: usize,
-    nb_process: usize,
-
-    /// This is a M[`max_process_time`, `nb_process`] matrix (one sub vector
-    /// for each turn to come).
-    /// The processes_to_end[i_time, i_process] value is the number of process
-    /// of index i_process which are going to end in i_time turn.
-    processes_to_end: Vec<Vec<usize>>,
+    processes_to_end: BinaryHeap<ProcessEnd>,
 }
 
 impl EndProcessStack {
-    fn push_zeroed_vector(&mut self) {
-        let new_vec = std::iter::repeat(0)
-                          .take(self.nb_process)
-                          .collect::<Vec<usize>>();
-        self.processes_to_end.push(new_vec);
-    }
-
     pub fn new(project: ProjectPtr) -> EndProcessStack {
-        let new_vec = Vec::with_capacity(project.get_max_process_time());
-        let mut to_return = EndProcessStack {
-            processes_to_end: new_vec,
-            nb_process: project.nb_process(),
-            max_process_time: project.get_max_process_time(),
-        };
-        for _ in 0..to_return.max_process_time + 3 {
-            to_return.push_zeroed_vector();
-        }
-        to_return
+        EndProcessStack { processes_to_end: BinaryHeap::new() }
     }
 
     pub fn add_processes(&self,
@@ -44,7 +62,8 @@ impl EndProcessStack {
         let mut to_return = self.clone();
         let process = project.get_process_by_index(i_process);
         let time = process.borrow().get_time();
-        to_return.processes_to_end[time - 1][i_process] += nb_process;
+        let process_end = ProcessEnd::new(time, i_process, nb_process);
+        to_return.processes_to_end.push(process_end);
         to_return
     }
 
@@ -55,26 +74,38 @@ impl EndProcessStack {
                                     nb_process: usize)
                                     -> EndProcessStack {
         let mut to_return = self.clone();
-        let process = project.get_process_by_index(i_process);
-        let time = process.borrow().get_time();
-        to_return.processes_to_end[0][i_process] = nb_process;
+        let process_end = ProcessEnd::new(0, i_process, nb_process);
+        to_return.processes_to_end.push(process_end);
         to_return
     }
 
     /// Return true if at least one process terminate at the next turn
     pub fn process_terminate_at_next_turn(&self) -> bool {
-        let next = &self.processes_to_end[0];
-        for nb_process in next {
-            if *nb_process > 0 {
-                return true;
-            }
+        if self.processes_to_end.len() == 0 {
+            return false;
         }
-        false
+        let next = self.processes_to_end.peek().unwrap();
+        next.time == TIME_TO_TERMINATE
     }
 
-    pub fn pop_one_turn(&mut self) {
-        self.processes_to_end.remove(0);
-        self.push_zeroed_vector();
+    pub fn decrement(&mut self) {
+        let mut vec = self.processes_to_end.clone().into_vec();
+        for process_end in vec.iter_mut() {
+            process_end.decrement();
+        }
+        self.processes_to_end = BinaryHeap::from(vec);
+    }
+
+    fn processes_terminating_this_turn(processes_to_end: &BinaryHeap<ProcessEnd>) -> Vec<&ProcessEnd> {
+        let mut to_return = Vec::new();
+        for process_end in processes_to_end {
+            if process_end.time == TIME_TO_TERMINATE {
+                to_return.push(process_end);
+            } else {
+                return to_return;
+            }
+        }
+        to_return
     }
 
     /// Pop all processes that terminate at the next turn and return all the
@@ -83,19 +114,27 @@ impl EndProcessStack {
                              project: ProjectPtr,
                              resources: &ResourceList)
                              -> ResourceList {
-        let terminated_processes = self.processes_to_end.remove(0);
+        // terminate processes
+        let new_bin = self.processes_to_end.clone();
+        let process_to_terminate = EndProcessStack::processes_terminating_this_turn(&new_bin);
         let mut to_return = resources.clone();
-        for i_process in 0..self.nb_process {
-            let nb_terminated_process = terminated_processes[i_process];
-            if nb_terminated_process == 0 {
-                continue;
-            }
-            let process = project.get_process_by_index(i_process).clone();
+        for process_end in process_to_terminate {
+            let process = project.get_process_by_index(process_end.index).clone();
             let post = process.borrow().get_post_vec().clone();
             for i in 0..project.nb_resource() {
-                to_return.add_resource(i, nb_terminated_process * post[i]);
+                to_return.add_resource(i, process_end.number * post[i]);
             }
         }
+
+        // remove terminated processes
+        let mut vec = Vec::new();
+        for process_end in &self.processes_to_end {
+            if process_end.time != TIME_TO_TERMINATE {
+                vec.push(process_end.clone());
+            }
+        }
+        self.processes_to_end = BinaryHeap::from(vec);
+
         to_return
     }
 }

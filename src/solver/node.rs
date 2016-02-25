@@ -40,21 +40,21 @@ impl Node {
                           project: ProjectPtr,
                           processes_ready: Vec<(usize, usize)>)
                           -> (i32, NodePtr) {
-        processes_ready.iter()
-                       .map(|&(i_process, nb_process)| {
-                           let resources = self.resources
-                                               .launch_process(project.clone(), i_process, 1);
-                           let processes_to_end = if nb_process == 1 {
-                               self.processes_to_end
-                                   .add_processes(project.clone(), i_process, nb_process)
-                           } else {
-                               self.processes_to_end
-                                   .add_processes(project.clone(), i_process, 1)
-                           };
-                           Node::new(project.clone(), self.time, resources, processes_to_end)
-                       })
-                       .max_by_key(|&(weight, _)| weight)
-                       .unwrap()
+        processes_ready.iter().map(|&(i_process, nb_process)| {
+            let resources = self.resources
+                               .launch_process(project.clone(), i_process, 1);
+            let processes_to_end = if nb_process == 1 {
+               self.processes_to_end
+                   .add_processes(project.clone(), i_process, nb_process)
+            } else {
+               self.processes_to_end
+                   .add_processes(project.clone(), i_process, 1)
+            };
+            println!("child_from_process {} {:?}", self.time, processes_to_end);
+            Node::new(project.clone(), self.time, resources, processes_to_end)
+       })
+       .max_by_key(|&(weight, _)| weight)
+       .unwrap()
     }
 
     /// Return the best child after a new turn has been passed
@@ -71,7 +71,7 @@ impl Node {
 
             // check if something happen in the turn
             if !processes_to_end.process_terminate_at_next_turn() {
-                processes_to_end.pop_one_turn();
+                processes_to_end.decrement();
                 continue;
             }
 
