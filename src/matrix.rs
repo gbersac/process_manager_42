@@ -1,37 +1,36 @@
 #[derive(PartialEq)]
 pub struct Matrix {
-	width: usize,
-	height: usize,
+    width: usize,
+    height: usize,
 
-	/// This is a row first matrix.
-	/// First come width cases for row 0, then width cases for row 2...
-    cases: Vec<i32>
+    /// This is a row first matrix.
+    /// First come width cases for row 0, then width cases for row 2...
+    cases: Vec<i32>,
 }
 
 impl Matrix {
     /// Create a matrix where every case is set to 0.
-	pub fn new(width: usize, height: usize) -> Matrix
-	{
-		Matrix {
-			width: width,
-			height: height,
-			cases: vec![0; (width * height)]
-		}
-	}
+    pub fn new(width: usize, height: usize) -> Matrix {
+        Matrix {
+            width: width,
+            height: height,
+            cases: vec![0; (width * height)],
+        }
+    }
 
-	fn to_mat_index(&self, x: usize, y: usize) -> usize {
-	    self.width * y + x
-	}
+    fn to_mat_index(&self, x: usize, y: usize) -> usize {
+        self.width * y + x
+    }
 
-	pub fn set(&mut self, x: usize, y: usize, value: i32){
-	    let index = self.to_mat_index(x, y);
-	    let mut r = self.cases.get_mut(index).unwrap();
-	    *r = value;
-	}
+    pub fn set(&mut self, x: usize, y: usize, value: i32) {
+        let index = self.to_mat_index(x, y);
+        let mut r = self.cases.get_mut(index).unwrap();
+        *r = value;
+    }
 
-	pub fn get(&self, x: usize, y: usize) -> i32 {
-	    *self.cases.get(self.to_mat_index(x, y)).unwrap()
-	}
+    pub fn get(&self, x: usize, y: usize) -> i32 {
+        *self.cases.get(self.to_mat_index(x, y)).unwrap()
+    }
 
     pub fn from_vec(width: usize, height: usize, v: Vec<i32>) -> Matrix {
         if v.len() != width * height {
@@ -62,8 +61,7 @@ impl Matrix {
 
 use std::fmt::{Formatter, Debug, Error};
 
-impl Debug for Matrix
-{
+impl Debug for Matrix {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         for y in 0..self.height {
             for x in 0..self.width {

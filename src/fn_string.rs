@@ -5,13 +5,13 @@ use std::io::Read;
 pub fn sub_string(model: &String, begin: usize, len: usize) -> Option<String> {
     let mut end = begin + len;
 
-    if begin > model.len(){
+    if begin > model.len() {
         return None;
     }
-    if begin + len > model.len(){
+    if begin + len > model.len() {
         end = model.len() - begin;
     }
-    Some(String::from_str(&(model[begin..end])).unwrap() )
+    Some(String::from_str(&(model[begin..end])).unwrap())
 }
 
 pub fn get_line(s: &str, num_line: usize) -> Option<&str> {

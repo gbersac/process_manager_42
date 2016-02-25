@@ -1,9 +1,8 @@
 use std::rc::Rc;
-use project::{Resource, ResourcePtr, TokenProcess, Process, ProcessPtr, ArcPtr
-		, Arc};
-use std::collections::{BTreeMap};
+use project::{Resource, ResourcePtr, TokenProcess, Process, ProcessPtr, ArcPtr, Arc};
+use std::collections::BTreeMap;
 use fn_string;
-use error::{KrpSimError};
+use error::KrpSimError;
 use parse::Parser;
 use matrix::Matrix;
 use std::borrow::BorrowMut;
@@ -12,41 +11,41 @@ pub type ProjectPtr = Rc<Project>;
 
 #[derive(Debug)]
 pub struct Project {
-	resources: BTreeMap<usize, ResourcePtr>,
-	resources_to_optimize: Vec<ResourcePtr>,
-	processes: BTreeMap<usize, ProcessPtr>,
-	pre_arc: Vec<ArcPtr>,
-	post_arc: Vec<ArcPtr>,
-	optimize_time: bool,
-	delay: usize
+    resources: BTreeMap<usize, ResourcePtr>,
+    resources_to_optimize: Vec<ResourcePtr>,
+    processes: BTreeMap<usize, ProcessPtr>,
+    pre_arc: Vec<ArcPtr>,
+    post_arc: Vec<ArcPtr>,
+    optimize_time: bool,
+    delay: usize,
 }
 
 impl Project {
-	pub fn get_resource_by_name(&self, name: &str) -> Option<ResourcePtr> {
-		for (_, ref res) in &self.resources {
-		    if name == res.borrow().get_name() {
-		    	return Some((*res).clone());
-		    }
-		}
-		None
-	}
+    pub fn get_resource_by_name(&self, name: &str) -> Option<ResourcePtr> {
+        for (_, ref res) in &self.resources {
+            if name == res.borrow().get_name() {
+                return Some((*res).clone());
+            }
+        }
+        None
+    }
 
-	pub fn get_resource_by_index(&self, index: usize) -> ResourcePtr {
-		self.resources[&index].clone()
-	}
+    pub fn get_resource_by_index(&self, index: usize) -> ResourcePtr {
+        self.resources[&index].clone()
+    }
 
-	pub fn get_process_by_name(&self, name: &str) -> Option<ProcessPtr> {
-		for (_, ref process) in &self.processes {
-		    if name == process.borrow().get_name() {
-		    	return Some((*process).clone());
-		    }
-		}
-		None
-	}
+    pub fn get_process_by_name(&self, name: &str) -> Option<ProcessPtr> {
+        for (_, ref process) in &self.processes {
+            if name == process.borrow().get_name() {
+                return Some((*process).clone());
+            }
+        }
+        None
+    }
 
-	pub fn get_process_by_index(&self, index: usize) -> ProcessPtr {
-		self.processes[&index].clone()
-	}
+    pub fn get_process_by_index(&self, index: usize) -> ProcessPtr {
+        self.processes[&index].clone()
+    }
     pub fn nb_resource(&self) -> usize {
         self.resources.len()
     }
@@ -66,151 +65,153 @@ impl Project {
     /// Return a list of all the resources available at the begin of the
     /// simulation.
     pub fn begin_resources(&self) -> Vec<usize> {
-    	let mut to_return = Vec::with_capacity(self.nb_resource() + 1);
-    	to_return.push(0);
-    	for i in 0..self.nb_resource() {
-    		let resource = self.resources[&i].clone();
-    	    to_return.push(resource.borrow().get_begin_quantity());
-    	}
-    	to_return
+        let mut to_return = Vec::with_capacity(self.nb_resource() + 1);
+        to_return.push(0);
+        for i in 0..self.nb_resource() {
+            let resource = self.resources[&i].clone();
+            to_return.push(resource.borrow().get_begin_quantity());
+        }
+        to_return
     }
 
-	/**************************************************************************/
-	/* New Project                                                            */
-	/**************************************************************************/
+    /// ***********************************************************************
+    // New Project
+    /// ***********************************************************************
 
-	/// Add resource `resource_name` if it doesn't already exist.
-	fn add_ressource(&mut self, resource_name: String) -> ResourcePtr {
-		match self.get_resource_by_name(&resource_name) {
-		    Some(res) => res,
-		    None => {
-		    	let index = self.resources.len();
-				let new_resource = Resource::new_ptr(&resource_name, index);
-				self.resources.insert(index, new_resource.clone());
-				new_resource
-		    }
-		}
-	}
+    /// Add resource `resource_name` if it doesn't already exist.
+    fn add_ressource(&mut self, resource_name: String) -> ResourcePtr {
+        match self.get_resource_by_name(&resource_name) {
+            Some(res) => res,
+            None => {
+                let index = self.resources.len();
+                let new_resource = Resource::new_ptr(&resource_name, index);
+                self.resources.insert(index, new_resource.clone());
+                new_resource
+            }
+        }
+    }
 
-	fn map_to_ressources(&mut self,
-		map: BTreeMap<String, usize>
-	) -> Vec<(ResourcePtr, usize)> {
-		let mut to_return = Vec::new();
-		for (key, value) in map.iter() {
-			let res = self.add_ressource(key.clone());
-			to_return.push((res, value.clone()));
-		}
-		to_return
-	}
+    fn map_to_ressources(&mut self, map: BTreeMap<String, usize>) -> Vec<(ResourcePtr, usize)> {
+        let mut to_return = Vec::new();
+        for (key, value) in map.iter() {
+            let res = self.add_ressource(key.clone());
+            to_return.push((res, value.clone()));
+        }
+        to_return
+    }
 
-	pub fn new(
-		resources: Vec<ResourcePtr>,
-		token_processes: Vec<TokenProcess>,
-		optimize: Vec<String>,
-		delay: usize
-	) -> Project {
-		// transform resources vec into a map
-		let mut map_resources: BTreeMap<usize, ResourcePtr> = BTreeMap::new();
-		for res in resources {
-			let res_index = res.borrow().get_index().clone();
-		    map_resources.insert(res_index, res);
-		}
+    pub fn new(resources: Vec<ResourcePtr>,
+               token_processes: Vec<TokenProcess>,
+               optimize: Vec<String>,
+               delay: usize)
+               -> Project {
+        // transform resources vec into a map
+        let mut map_resources: BTreeMap<usize, ResourcePtr> = BTreeMap::new();
+        for res in resources {
+            let res_index = res.borrow().get_index().clone();
+            map_resources.insert(res_index, res);
+        }
 
-		// create the project struct
-		let mut project = Project {
-			resources: map_resources,
-			resources_to_optimize: Vec::new(),
-			processes: BTreeMap::new(),
-			pre_arc: Vec::new(),
-			post_arc: Vec::new(),
-			optimize_time: false,
-			delay: delay
-		};
+        // create the project struct
+        let mut project = Project {
+            resources: map_resources,
+            resources_to_optimize: Vec::new(),
+            processes: BTreeMap::new(),
+            pre_arc: Vec::new(),
+            post_arc: Vec::new(),
+            optimize_time: false,
+            delay: delay,
+        };
 
-		// transform TokenProcess into Process
-		let mut processes = BTreeMap::new();
-		for (num, ref tok) in token_processes.iter().enumerate() {
-		    let new_process = Process::new_ptr(tok.name.clone(), tok.time, num);
-		    processes.insert(num, new_process.clone());
-		    for (prerequisite, number) in tok.prerequisites.clone() {
-		    	let res = project.add_ressource(prerequisite);
-		        let new_arc = Arc::new_pre(res, new_process.clone(), number);
-		        project.pre_arc.push(new_arc);
-		    }
-		    for (product, number) in tok.products.clone() {
-		    	let res = project.add_ressource(product);
-		        let new_arc = Arc::new_post(res, new_process.clone(), number);
-		        project.post_arc.push(new_arc);
-		    }
-		}
-		project.processes = processes;
+        // transform TokenProcess into Process
+        let mut processes = BTreeMap::new();
+        for (num, ref tok) in token_processes.iter().enumerate() {
+            let new_process = Process::new_ptr(tok.name.clone(), tok.time, num);
+            processes.insert(num, new_process.clone());
+            for (prerequisite, number) in tok.prerequisites.clone() {
+                let res = project.add_ressource(prerequisite);
+                let new_arc = Arc::new_pre(res, new_process.clone(), number);
+                project.pre_arc.push(new_arc);
+            }
+            for (product, number) in tok.products.clone() {
+                let res = project.add_ressource(product);
+                let new_arc = Arc::new_post(res, new_process.clone(), number);
+                project.post_arc.push(new_arc);
+            }
+        }
+        project.processes = processes;
 
-		// transform optimize into ResourcePtr
-		let mut resources_to_optimize = Vec::new();
-		for res in optimize {
-			match project.get_resource_by_name(&res) {
-			    Some(resource) => {
-			    	(*resource).borrow_mut().set_is_optimized();
-			    	resources_to_optimize.push(resource.clone());
-			    },
-			    None => {
-			    	if res == "time" { /* time is a special ressource */
-			    	    project.optimize_time = true;
-			    	} else {
-				    	println!("Unknow resource to optimize {:?}", res);
-			    	}
-			    },
-			}
-		}
-		project.resources_to_optimize = resources_to_optimize;
+        // transform optimize into ResourcePtr
+        let mut resources_to_optimize = Vec::new();
+        for res in optimize {
+            match project.get_resource_by_name(&res) {
+                Some(resource) => {
+                    (*resource).borrow_mut().set_is_optimized();
+                    resources_to_optimize.push(resource.clone());
+                }
+                None => {
+                    if res == "time" {
+                        // time is a special ressource
+                        project.optimize_time = true;
+                    } else {
+                        println!("Unknow resource to optimize {:?}", res);
+                    }
+                }
+            }
+        }
+        project.resources_to_optimize = resources_to_optimize;
 
-		// initialize resource vec in processes
-		let nb_resource = project.nb_resource();
-		for (_, p) in &project.processes {
-		    (**p).borrow_mut().init_resources_vec(nb_resource);
-		}
+        // initialize resource vec in processes
+        let nb_resource = project.nb_resource();
+        for (_, p) in &project.processes {
+            (**p).borrow_mut().init_resources_vec(nb_resource);
+        }
 
-		project
-	}
+        project
+    }
 
-	pub fn from_file(file_name: &str, delay: usize) -> Project {
-		let instructions_str = fn_string::file_as_string(file_name);
-		match Parser::parse(&instructions_str) {
-		    Ok((ressources, optimize, processes)) => {
-		    	// launch process resolution
-		    	Project::new(ressources, processes, optimize, delay)
-		    },
-		    Err(e) => {
-		    	match e {
-		    	    KrpSimError::ParseError(line) => {
-						let line_str =
-								fn_string::get_line(&instructions_str, line - 1).unwrap();
-				    	panic!("Error parsing file {} on line {}:\n{}",
-				    			file_name, line, line_str)
-		    	    },
-		    	}
-		    },
-		}
-	}
+    pub fn from_file(file_name: &str, delay: usize) -> Project {
+        let instructions_str = fn_string::file_as_string(file_name);
+        match Parser::parse(&instructions_str) {
+            Ok((ressources, optimize, processes)) => {
+                // launch process resolution
+                Project::new(ressources, processes, optimize, delay)
+            }
+            Err(e) => {
+                match e {
+                    KrpSimError::ParseError(line) => {
+                        let line_str = fn_string::get_line(&instructions_str, line - 1).unwrap();
+                        panic!("Error parsing file {} on line {}:\n{}",
+                               file_name,
+                               line,
+                               line_str)
+                    }
+                }
+            }
+        }
+    }
 
-	/// Return the maximum of time a process take to be executed.
-	pub fn get_max_process_time(&self) -> usize {
-	    self.processes.iter().map(|(_, p)| (*p).borrow()
-	    		.get_time()).max().unwrap()
-	}
+    /// Return the maximum of time a process take to be executed.
+    pub fn get_max_process_time(&self) -> usize {
+        self.processes
+            .iter()
+            .map(|(_, p)| {
+                (*p).borrow()
+                    .get_time()
+            })
+            .max()
+            .unwrap()
+    }
 
-	pub fn get_delay(&self) -> usize {
-	    self.delay
-	}
+    pub fn get_delay(&self) -> usize {
+        self.delay
+    }
 
     /// Return the number of process of index `i_process` that can be launch.
     ///
     /// `resources` is a vector with `resources[i]` being the number of
     /// available resource of index `i`.
-    pub fn can_trigger_process(&self,
-        i_process: usize,
-        resources: &Vec<usize>
-    ) -> usize {
+    pub fn can_trigger_process(&self, i_process: usize, resources: &Vec<usize>) -> usize {
         // get the vector of prerequisite for the process i_process
         let process = self.get_process_by_index(i_process).clone();
         let prerequisites = process.borrow().get_pre_vec().clone();
@@ -219,7 +220,7 @@ impl Project {
         let mut nb_match: usize = 0;
         for i in 1..self.nb_resource() {
             if prerequisites[i] == 0 {
-                continue ;
+                continue;
             }
             let nb_match_i = resources[i] / prerequisites[i] as usize;
             if nb_match_i == 0 {

@@ -1,3 +1,5 @@
+*.bk
+
 # Compiled files
 *.o
 *.so

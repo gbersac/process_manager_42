@@ -19,7 +19,7 @@ pub struct Resource {
     creators: Vec<ArcPtr>,
 
     /// List of process which use this resource
-    consumers: Vec<ArcPtr>
+    consumers: Vec<ArcPtr>,
 }
 
 impl Resource {
@@ -30,7 +30,7 @@ impl Resource {
             is_optimized: false,
             creators: Vec::new(),
             consumers: Vec::new(),
-            index: index
+            index: index,
         }
     }
 

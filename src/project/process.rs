@@ -1,8 +1,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::collections::BTreeMap;
-use super::{ResourcePtr};
-use project::{ArcPtr};
+use super::ResourcePtr;
+use project::ArcPtr;
 use std;
 
 pub type ProcessPtr = Rc<RefCell<Process>>;
@@ -13,22 +13,21 @@ pub struct TokenProcess {
     pub name: String,
     pub prerequisites: BTreeMap<String, usize>,
     pub products: BTreeMap<String, usize>,
-    pub time: usize
+    pub time: usize,
 }
 
 impl TokenProcess {
-    pub fn new(
-    	name: String,
-    	prerequisites: BTreeMap<String, usize>,
-    	products: BTreeMap<String, usize>,
-    	time: usize
-    ) -> TokenProcess {
-    	TokenProcess {
-    		name: name,
-    		prerequisites: prerequisites,
-    		products: products,
-    		time: time
-    	}
+    pub fn new(name: String,
+               prerequisites: BTreeMap<String, usize>,
+               products: BTreeMap<String, usize>,
+               time: usize)
+               -> TokenProcess {
+        TokenProcess {
+            name: name,
+            prerequisites: prerequisites,
+            products: products,
+            time: time,
+        }
     }
 }
 
@@ -48,7 +47,7 @@ pub struct Process {
 
     /// A vector with pre_vec[i] = number of resource of index i created by
     /// this process. Set to none if uninitialized.
-    post_vec: Vec<usize>
+    post_vec: Vec<usize>,
 }
 
 impl Process {
@@ -56,11 +55,7 @@ impl Process {
         &self.name
     }
 
-    pub fn new(
-        name: String,
-        time: usize,
-        index: usize
-    ) -> Process {
+    pub fn new(name: String, time: usize, index: usize) -> Process {
         Process {
             name: name,
             prerequisites: Vec::new(),
@@ -68,15 +63,11 @@ impl Process {
             time: time,
             index: index,
             post_vec: Vec::new(),
-            pre_vec: Vec::new()
+            pre_vec: Vec::new(),
         }
     }
 
-    pub fn new_ptr(
-        name: String,
-        time: usize,
-        index: usize
-    ) -> ProcessPtr {
+    pub fn new_ptr(name: String, time: usize, index: usize) -> ProcessPtr {
         Rc::new(RefCell::new(Process::new(name, time, index)))
     }
 
@@ -101,8 +92,9 @@ impl Process {
     pub fn init_resources_vec(&mut self, nb_resource: usize) {
         // init pre_vec
         let pre_vec_len = nb_resource + 1;
-        self.pre_vec = std::iter::repeat(0).take(pre_vec_len)
-                .collect::<Vec<usize>>();
+        self.pre_vec = std::iter::repeat(0)
+                           .take(pre_vec_len)
+                           .collect::<Vec<usize>>();
         self.pre_vec[0] = self.time;
         for pre in &self.prerequisites {
             let resource = pre.get_resource().clone();
@@ -113,8 +105,9 @@ impl Process {
 
         // init post_vec
         let post_vec_len = nb_resource;
-        self.post_vec = std::iter::repeat(0).take(post_vec_len)
-                .collect::<Vec<usize>>();
+        self.post_vec = std::iter::repeat(0)
+                            .take(post_vec_len)
+                            .collect::<Vec<usize>>();
         for post in &self.products {
             let resource = post.get_resource().clone();
             let i_res = resource.borrow().get_index();
