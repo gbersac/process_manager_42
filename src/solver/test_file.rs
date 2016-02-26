@@ -37,4 +37,5 @@ fn test_solve() {
     test_one("inputs/tests/long_way", 10, vec![4, 0, 0, 2], 2);
     test_one("inputs/tests/recycle", 10, vec![4, 0, 1, 0, 2], 2);
     test_one("inputs/tests/sacrifice", 6, vec![2, 2, 0], 2);
+    test_one("inputs/tests/many_processes", 6, vec![100000, 0, 200000], 200000);
 }

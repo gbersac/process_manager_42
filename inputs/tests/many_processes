@@ -1,0 +1,6 @@
+money:1000000
+
+buy1:(money:1):(final:2):1
+buy2:(money:1):(final:1):1
+
+optimize:(final)
