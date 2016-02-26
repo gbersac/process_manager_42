@@ -26,8 +26,10 @@ impl Node {
     fn processes_ready(&self, project: ProjectPtr) -> Vec<(usize, usize)> {
         let mut to_return = Vec::new();
         for i_process in 0..project.nb_process() {
+            let process = project.get_process_by_index(i_process);
+            let process_time = self.time + process.borrow().get_time();
             let nb_process = project.can_trigger_process(i_process, self.resources.get_list());
-            if nb_process > 0 {
+            if nb_process > 0 && process_time < project.get_delay() {
                 to_return.push((i_process, nb_process));
             }
         }
@@ -50,7 +52,6 @@ impl Node {
                self.processes_to_end
                    .add_processes(project.clone(), i_process, 1)
             };
-            println!("child_from_process {} {:?}", self.time, processes_to_end);
             Node::new(project.clone(), self.time, resources, processes_to_end)
        })
        .max_by_key(|&(weight, _)| weight)
@@ -132,6 +133,13 @@ impl Node {
 
     pub fn get_child(&self) -> Option<NodePtr> {
         self.child.clone()
+    }
+
+    pub fn get_final_resources(&self) -> &ResourceList {
+        match self.child {
+            Some(ref child) => child.get_final_resources(),
+            None => &self.resources,
+        }
     }
 }
 

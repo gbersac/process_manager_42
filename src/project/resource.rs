@@ -6,6 +6,8 @@ pub type ResourcePtr = Rc<RefCell<Resource>>;
 
 #[derive(Debug)]
 pub struct Resource {
+    index: usize,
+
     /// The name is the id of the resource. Two resource can't have the same
     /// name.
     name: String,
@@ -13,7 +15,6 @@ pub struct Resource {
     /// Quantity of this resource at the beginning of the simulation
     begin_quantity: usize,
     is_optimized: bool,
-    index: usize,
 
     /// List of process which create this resource
     creators: Vec<ArcPtr>,

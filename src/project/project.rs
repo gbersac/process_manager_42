@@ -218,7 +218,7 @@ impl Project {
 
         // check if there is enough of each resource (except time)
         let mut nb_match: usize = 0;
-        for i in 1..self.nb_resource() {
+        for i in 1..self.nb_resource() + 1 {
             if prerequisites[i] == 0 {
                 continue;
             }

@@ -25,7 +25,7 @@ impl ResourceList {
         let mut new_list = self.list.clone();
         let process = project.get_process_by_index(i_process).clone();
         let pre_vec = process.borrow().get_pre_vec().clone();
-        for i in 1..project.nb_resource() {
+        for i in 1..project.nb_resource() + 1 {
             let res_consumed = pre_vec[i];
             new_list[i] -= res_consumed * nb_process;
         }
