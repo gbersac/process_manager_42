@@ -123,4 +123,17 @@ impl Process {
     pub fn get_post_vec(&self) -> &Vec<usize> {
         &self.post_vec
     }
+
+    /// Return true if this process produce at least one of the resources
+    /// listed in `resources`.
+    pub fn produce_resources(&self, resources: &Vec<ResourcePtr>) -> bool {
+        for product in &self.products {
+            for resource in resources {
+                if product.is_resource(resource.clone()) {
+                    return true;
+                }
+            }
+        }
+        false
+    }
 }

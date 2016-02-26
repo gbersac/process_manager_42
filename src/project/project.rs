@@ -5,7 +5,7 @@ use fn_string;
 use error::KrpSimError;
 use parse::Parser;
 use matrix::Matrix;
-use std::borrow::BorrowMut;
+use std::borrow::{BorrowMut};
 
 pub type ProjectPtr = Rc<Project>;
 
@@ -18,6 +18,9 @@ pub struct Project {
     post_arc: Vec<ArcPtr>,
     optimize_time: bool,
     delay: usize,
+
+    /// List of all the processes which create one of the resources to optimize
+    final_processes: Vec<ProcessPtr>
 }
 
 impl Project {
@@ -62,6 +65,14 @@ impl Project {
         self.optimize_time
     }
 
+    pub fn get_delay(&self) -> usize {
+        self.delay
+    }
+
+    pub fn get_final_processes(&self) -> &Vec<ProcessPtr> {
+        &self.final_processes
+    }
+
     /// Return a list of all the resources available at the begin of the
     /// simulation.
     pub fn begin_resources(&self) -> Vec<usize> {
@@ -72,6 +83,18 @@ impl Project {
             to_return.push(resource.borrow().get_begin_quantity());
         }
         to_return
+    }
+
+    /// Return the maximum of time a process take to be executed.
+    pub fn get_max_process_time(&self) -> usize {
+        self.processes
+            .iter()
+            .map(|(_, p)| {
+                (*p).borrow()
+                    .get_time()
+            })
+            .max()
+            .unwrap()
     }
 
     /// ***********************************************************************
@@ -121,6 +144,7 @@ impl Project {
             post_arc: Vec::new(),
             optimize_time: false,
             delay: delay,
+            final_processes: Vec::new()
         };
 
         // transform TokenProcess into Process
@@ -161,10 +185,17 @@ impl Project {
         }
         project.resources_to_optimize = resources_to_optimize;
 
-        // initialize resource vec in processes
+        // initialize pre and post resources vec in processes
         let nb_resource = project.nb_resource();
         for (_, p) in &project.processes {
             (**p).borrow_mut().init_resources_vec(nb_resource);
+        }
+
+        // fill the `final_processes` attribute
+        for (_, process) in &project.processes {
+            if process.borrow().produce_resources(&project.resources_to_optimize) {
+                project.final_processes.push(process.clone());
+            }
         }
 
         project
@@ -189,22 +220,6 @@ impl Project {
                 }
             }
         }
-    }
-
-    /// Return the maximum of time a process take to be executed.
-    pub fn get_max_process_time(&self) -> usize {
-        self.processes
-            .iter()
-            .map(|(_, p)| {
-                (*p).borrow()
-                    .get_time()
-            })
-            .max()
-            .unwrap()
-    }
-
-    pub fn get_delay(&self) -> usize {
-        self.delay
     }
 
     /// Return the number of process of index `i_process` that can be launch.

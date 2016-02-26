@@ -53,6 +53,10 @@ impl Arc {
     pub fn get_value(&self) -> usize {
         self.value
     }
+
+    pub fn is_resource(&self, resource: ResourcePtr) -> bool {
+        resource.borrow().get_index() == self.resource.borrow().get_index()
+    }
 }
 
 use std::fmt::{Formatter, Debug, Error};
