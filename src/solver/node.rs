@@ -1,7 +1,6 @@
 use std::rc::Rc;
-use project::{Project, ProjectPtr};
+use project::{Project, ProjectPtr, ResourceList};
 use solver::end_process_stack::EndProcessStack;
-use solver::resource_list::ResourceList;
 
 pub type NodePtr = Rc<Node>;
 
@@ -36,6 +35,18 @@ impl Node {
         to_return
     }
 
+    fn child_from_conflicting_processes(&self,
+                                        project: ProjectPtr)
+                                        -> (i32, NodePtr) {
+        project.get_final_processes().iter().map(|final_process| {
+            // try to launch the process, then the providers of this process...
+            // get process list, how many time it is launched, resulting resource list
+            unimplemented!()
+        })
+       .max_by_key(|&(weight, _)| weight)
+       .unwrap()
+    }
+
     /// Return the best child of all the child created after they launched
     /// a process in `processes_ready`
     fn child_from_process(&self,
@@ -43,16 +54,16 @@ impl Node {
                           processes_ready: Vec<(usize, usize)>)
                           -> (i32, NodePtr) {
         processes_ready.iter().map(|&(i_process, nb_process)| {
-            let resources = self.resources
-                               .launch_process(project.clone(), i_process, 1);
-            let processes_to_end = if nb_process == 1 {
-               self.processes_to_end
-                   .add_processes(project.clone(), i_process, nb_process)
+            if processes_ready.len() == 1 {
+                let resources = self.resources
+                                    .launch_process(project.clone(), i_process, nb_process);
+                let processes_to_end = self.processes_to_end
+                    .add_processes(project.clone(), i_process, nb_process);
+                Node::new(project.clone(), self.time,
+                          resources, processes_to_end)
             } else {
-               self.processes_to_end
-                   .add_processes(project.clone(), i_process, 1)
-            };
-            Node::new(project.clone(), self.time, resources, processes_to_end)
+               self.child_from_conflicting_processes(project.clone())
+            }
        })
        .max_by_key(|&(weight, _)| weight)
        .unwrap()

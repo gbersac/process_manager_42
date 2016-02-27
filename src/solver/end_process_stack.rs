@@ -1,6 +1,5 @@
 use std::collections::BinaryHeap;
-use project::ProjectPtr;
-use solver::resource_list::ResourceList;
+use project::{ProjectPtr, ResourceList};
 use std;
 use std::cmp::Ordering;
 
