@@ -1,4 +1,4 @@
-use project::{ProcessPtr, ResourcePtr};
+use project::{ProcessPtr, ResourcePtr, ProcessList, ResourceList};
 use std::rc::Rc;
 
 pub type ArcPtr = Rc<Arc>;
@@ -56,6 +56,37 @@ impl Arc {
 
     pub fn is_resource(&self, resource: ResourcePtr) -> bool {
         resource.borrow().get_index() == self.resource.borrow().get_index()
+    }
+
+    /// Try to to create as many of this resource as possible.
+    ///
+    /// Return the list of processes launched, resulting resource list.
+    pub fn trigger_and_providers(&self,
+                                 mut resources: &mut ResourceList,
+                                 already_tested: &mut Vec<ProcessPtr>)
+                                 -> ProcessList {
+        let mut new_processes = ProcessList::new();
+        for creator in self.resource.borrow().get_creators() {
+            let process = creator.get_process();
+            let nb_process = process.borrow().can_trigger(&resources);
+            if nb_process > 0 {
+                *resources = resources.launch_process(process.clone(),
+                                                     nb_process);
+                new_processes.add(process.clone(), nb_process);
+                already_tested.push(process.clone());
+                if resources.is_empty() {
+                    return new_processes;
+                } else {
+                    for pre in process.borrow().get_prerequisites() {
+                        let mut new_processes2 =
+                                pre.trigger_and_providers(&mut resources,
+                                                          already_tested);
+                        new_processes.append(&mut new_processes2);
+                    }
+                }
+            }
+        }
+        new_processes
     }
 }
 

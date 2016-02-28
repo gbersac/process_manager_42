@@ -86,6 +86,10 @@ impl Process {
         self.time
     }
 
+    pub fn get_prerequisites(&self) -> &Vec<ArcPtr> {
+        &self.prerequisites
+    }
+
     /// Have to be launch every time a prerequisites/products has been
     /// changed/added.
     pub fn init_resources_vec(&mut self, nb_resource: usize) {
@@ -157,19 +161,27 @@ impl Process {
     }
 
     /// Try to launch the process, then the providers of this process...
-    /// return process list, how many time it is launched, resulting resource list
+    ///
+    /// Return the list of processes launched, resulting resource list.
     pub fn trigger_and_providers(selfp: ProcessPtr,
-                                 resources: ResourceList,
-                                 already_tested: Vec<ProcessPtr>)
-                                 -> (ProcessList, ResourceList) {
+                                 resources: &mut ResourceList,
+                                 already_tested: &mut Vec<ProcessPtr>)
+                                 -> ProcessList {
         let nb_process = selfp.borrow().can_trigger(&resources);
-        let mut new_resources = resources.launch_process(selfp.clone(), nb_process);
-        if new_resources.is_empty() {
-            let mut process_list = ProcessList::new();
-            process_list.add(selfp, nb_process);
-            (process_list, new_resources)
+        *resources = resources.launch_process(selfp.clone(), nb_process);
+        let mut new_processes = ProcessList::new();
+        new_processes.add(selfp.clone(), nb_process);
+        if resources.is_empty() {
+            (new_processes)
         } else {
-            unimplemented!();
+            already_tested.push(selfp.clone());
+            for pre in selfp.borrow().get_prerequisites() {
+                let mut new_processes2 =
+                        pre.trigger_and_providers(resources,
+                                                  already_tested);
+                new_processes.append(&mut new_processes2);
+            }
+            new_processes
         }
     }
 }

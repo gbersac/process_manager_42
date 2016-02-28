@@ -51,6 +51,10 @@ impl Resource {
         self.index
     }
 
+    pub fn get_creators(&self) -> &Vec<ArcPtr> {
+        &self.creators
+    }
+
     pub fn add(&mut self, begin_quantity: usize) {
         self.begin_quantity += begin_quantity;
     }

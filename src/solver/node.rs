@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use project::{Project, ProjectPtr, ResourceList, ProcessList};
+use project::{Project, ProjectPtr, ResourceList, ProcessList, Process};
 use solver::end_process_stack::EndProcessStack;
 
 pub type NodePtr = Rc<Node>;
@@ -39,9 +39,14 @@ impl Node {
                                         project: ProjectPtr)
                                         -> (i32, NodePtr) {
         project.get_final_processes().iter().map(|final_process| {
-            // try to launch the process, then the providers of this process...
-            // get process list, how many time it is launched, resulting resource list
-            unimplemented!()
+            let mut new_resources = self.resources.clone();
+            let new_processes =
+                    Process::trigger_and_providers(final_process.clone(),
+                                                   &mut new_resources,
+                                                   &mut Vec::new());
+            let mut processes_to_end = self.processes_to_end.clone();
+            processes_to_end.add_process_list(new_processes);
+            Node::new(project.clone(), self.time, new_resources, processes_to_end)
         })
        .max_by_key(|&(weight, _)| weight)
        .unwrap()

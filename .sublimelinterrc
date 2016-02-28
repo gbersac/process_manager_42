@@ -1,0 +1,14 @@
+{
+  "rc_search_limit": 5,
+  "linters": {
+      "rust": {
+        "@disable": false,
+        "args": [],
+        "crate-root": null,
+        "excludes": [],
+        "use-cargo": true,
+        "use-cargo-check": false,
+        "use-crate-root": false
+      }
+  }
+}

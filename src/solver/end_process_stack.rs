@@ -1,5 +1,5 @@
 use std::collections::BinaryHeap;
-use project::{ProjectPtr, ResourceList, ProcessPtr};
+use project::{ProjectPtr, ResourceList, ProcessPtr, ProcessList};
 use std;
 use std::cmp::Ordering;
 
@@ -77,6 +77,16 @@ impl EndProcessStack {
         to_return
     }
 
+    pub fn add_process_list(&mut self, list: ProcessList) -> EndProcessStack {
+        let mut to_return = self.clone();
+        for &(ref process, nb) in list.iter() {
+            let time = process.borrow().get_time();
+            let process_end = ProcessEnd::new(time, process.clone(), nb);
+            to_return.processes_to_end.push(process_end);
+        }
+        to_return
+    }
+
     #[cfg(test)]
     pub fn add_processes__next_turn(&self,
                                     project: ProjectPtr,
@@ -84,7 +94,8 @@ impl EndProcessStack {
                                     nb_process: usize)
                                     -> EndProcessStack {
         let mut to_return = self.clone();
-        let process_end = ProcessEnd::new(0, i_process, nb_process);
+        let process = project.get_process_by_index(i_process);
+        let process_end = ProcessEnd::new(0, process, nb_process);
         to_return.processes_to_end.push(process_end);
         to_return
     }

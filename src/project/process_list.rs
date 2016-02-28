@@ -30,4 +30,8 @@ impl ProcessList {
     pub fn len(&self) -> usize {
         self.list.len()
     }
+
+    pub fn append(&mut self, to_append: &mut ProcessList) {
+        self.list.append(&mut to_append.list);
+    }
 }
