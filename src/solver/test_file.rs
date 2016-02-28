@@ -1,6 +1,6 @@
 use std::rc::Rc;
 use project::Project;
-use solver::resource_list::{ResourceList};
+use project::{ResourceList};
 use solver::{NodePtr};
 use solver;
 

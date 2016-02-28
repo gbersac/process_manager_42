@@ -1,4 +1,4 @@
-use project::ProjectPtr;
+use project::{ProjectPtr, ProcessPtr};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResourceList {
@@ -18,19 +18,26 @@ impl ResourceList {
     /// the number of resource required to launch `nb_process` new process
     /// of index `i_process`.
     pub fn launch_process(&self,
-                          project: ProjectPtr,
-                          i_process: usize,
+                          process: ProcessPtr,
                           nb_process: usize)
                           -> ResourceList {
         let mut new_list = self.list.clone();
-        let process = project.get_process_by_index(i_process).clone();
         let pre_vec = process.borrow().get_pre_vec().clone();
-        for i in 1..project.nb_resource() + 1 {
+        for i in 1..self.list.len() {
             let res_consumed = pre_vec[i];
             new_list[i] -= res_consumed * nb_process;
         }
         new_list[0] += pre_vec[0] * nb_process;
         ResourceList::new(new_list)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        for i in 1..self.list.len() {
+            if i != 0 {
+                return false;
+            }
+        }
+        true
     }
 
     pub fn get_list(&self) -> &Vec<usize> {

@@ -6,6 +6,7 @@ use error::KrpSimError;
 use parse::Parser;
 use matrix::Matrix;
 use std::borrow::{BorrowMut};
+use project::ResourceList;
 
 pub type ProjectPtr = Rc<Project>;
 
@@ -220,32 +221,5 @@ impl Project {
                 }
             }
         }
-    }
-
-    /// Return the number of process of index `i_process` that can be launch.
-    ///
-    /// `resources` is a vector with `resources[i]` being the number of
-    /// available resource of index `i`.
-    pub fn can_trigger_process(&self, i_process: usize, resources: &Vec<usize>) -> usize {
-        // get the vector of prerequisite for the process i_process
-        let process = self.get_process_by_index(i_process).clone();
-        let prerequisites = process.borrow().get_pre_vec().clone();
-
-        // check if there is enough of each resource (except time)
-        let mut nb_match: usize = 0;
-        for i in 1..self.nb_resource() + 1 {
-            if prerequisites[i] == 0 {
-                continue;
-            }
-            let nb_match_i = resources[i] / prerequisites[i] as usize;
-            if nb_match_i == 0 {
-                return 0;
-            } else if nb_match_i < nb_match {
-                nb_match = nb_match_i;
-            } else if nb_match == 0 {
-                nb_match = nb_match_i;
-            }
-        }
-        nb_match
     }
 }

@@ -26,8 +26,8 @@ impl Node {
         let mut to_return = Vec::new();
         for i_process in 0..project.nb_process() {
             let process = project.get_process_by_index(i_process);
+            let nb_process = process.borrow().can_trigger(&self.resources);
             let process_time = self.time + process.borrow().get_time();
-            let nb_process = project.can_trigger_process(i_process, self.resources.get_list());
             if nb_process > 0 && process_time < project.get_delay() {
                 to_return.push((i_process, nb_process));
             }
@@ -55,8 +55,9 @@ impl Node {
                           -> (i32, NodePtr) {
         processes_ready.iter().map(|&(i_process, nb_process)| {
             if processes_ready.len() == 1 {
+                let process = project.get_process_by_index(i_process);
                 let resources = self.resources
-                                    .launch_process(project.clone(), i_process, nb_process);
+                                    .launch_process(process.clone(), nb_process);
                 let processes_to_end = self.processes_to_end
                     .add_processes(project.clone(), i_process, nb_process);
                 Node::new(project.clone(), self.time,

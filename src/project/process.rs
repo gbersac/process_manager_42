@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::collections::BTreeMap;
 use super::ResourcePtr;
-use project::ArcPtr;
+use project::{ArcPtr, ResourceList};
 use std;
 
 pub type ProcessPtr = Rc<RefCell<Process>>;
@@ -135,5 +135,40 @@ impl Process {
             }
         }
         false
+    }
+
+    /// Return the number of time this process can be launched.
+    pub fn can_trigger(&self, resources: &ResourceList) -> usize {
+        // check if there is enough of each resource (except time)
+        let mut nb_match: usize = 0;
+        for i in 1..self.pre_vec.len() + 1 {
+            if self.pre_vec[i] == 0 {
+                continue;
+            }
+            let nb_match_i = resources.nb_resource(i) / self.pre_vec[i] as usize;
+            if nb_match_i == 0 {
+                return 0;
+            } else if nb_match_i < nb_match {
+                nb_match = nb_match_i;
+            } else if nb_match == 0 {
+                nb_match = nb_match_i;
+            }
+        }
+        nb_match
+    }
+
+    /// Try to launch the process, then the providers of this process...
+    /// return process list, how many time it is launched, resulting resource list
+    pub fn trigger_and_providers(selfp: ProcessPtr,
+                                 resources: ResourceList,
+                                 already_tested: Vec<ProcessPtr>)
+                                 -> (Vec<(ProcessPtr, usize)>, ResourceList) {
+        let nb_process = selfp.borrow().can_trigger(&resources);
+        let mut new_resources = resources.launch_process(selfp.clone(), nb_process);
+        if new_resources.is_empty() {
+            (vec![(selfp.clone(), nb_process)], new_resources)
+        } else {
+            unimplemented!();
+        }
     }
 }
