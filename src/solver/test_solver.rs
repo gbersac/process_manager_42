@@ -16,7 +16,7 @@ fn test_one0(file: &str,
     println!("project {:?}", project);
     let resource_list = ResourceList::new(resources);
     let process = project.get_process_by_name(process_name).unwrap().clone();
-    let result = resource_list.launch_process(process.clone(),
+    let result = resource_list.new_launch_process(process.clone(),
                                               nb_process);
     let mut res_vec = std::iter::repeat(0)
                           .take(project.nb_resource() + 1)

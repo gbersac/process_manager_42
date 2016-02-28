@@ -61,7 +61,8 @@ impl Node {
         processes_ready.iter().map(|&(ref process, nb_process)| {
             if processes_ready.len() == 1 {
                 let resources = self.resources
-                                    .launch_process(process.clone(), nb_process);
+                                    .new_launch_process(process.clone(),
+                                                        nb_process);
                 let processes_to_end = self.processes_to_end
                     .add_processes(project.clone(), process.clone(), nb_process);
                 Node::new(project.clone(), self.time,

@@ -144,11 +144,13 @@ impl Process {
     pub fn can_trigger(&self, resources: &ResourceList) -> usize {
         // check if there is enough of each resource (except time)
         let mut nb_match: usize = 0;
-        for i in 1..self.pre_vec.len() + 1 {
+        for i in 1..self.pre_vec.len() {
             if self.pre_vec[i] == 0 {
                 continue;
             }
             let nb_match_i = resources.nb_resource(i) / self.pre_vec[i] as usize;
+            println!("resources.nb_resource {} / self.pre_vec {}", resources.nb_resource(i), self.pre_vec[i]);
+            println!("nb_match_i {:?}", nb_match_i);
             if nb_match_i == 0 {
                 return 0;
             } else if nb_match_i < nb_match {
@@ -168,7 +170,7 @@ impl Process {
                                  already_tested: &mut Vec<ProcessPtr>)
                                  -> ProcessList {
         let nb_process = selfp.borrow().can_trigger(&resources);
-        *resources = resources.launch_process(selfp.clone(), nb_process);
+        resources.launch_process(selfp.clone(), nb_process);
         let mut new_processes = ProcessList::new();
         new_processes.add(selfp.clone(), nb_process);
         if resources.is_empty() {

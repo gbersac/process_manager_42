@@ -70,7 +70,7 @@ impl Arc {
             let process = creator.get_process();
             let nb_process = process.borrow().can_trigger(&resources);
             if nb_process > 0 {
-                *resources = resources.launch_process(process.clone(),
+                resources.launch_process(process.clone(),
                                                      nb_process);
                 new_processes.add(process.clone(), nb_process);
                 already_tested.push(process.clone());
