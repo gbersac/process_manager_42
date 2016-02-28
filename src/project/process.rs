@@ -2,13 +2,12 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::collections::BTreeMap;
 use super::ResourcePtr;
-use project::{ArcPtr, ResourceList};
+use project::{ArcPtr, ResourceList, ProcessList};
 use std;
 
 pub type ProcessPtr = Rc<RefCell<Process>>;
 
 /// Created by parsing. To be transformed to a process.
-// #[derive(Debug)]
 pub struct TokenProcess {
     pub name: String,
     pub prerequisites: BTreeMap<String, usize>,
@@ -162,11 +161,13 @@ impl Process {
     pub fn trigger_and_providers(selfp: ProcessPtr,
                                  resources: ResourceList,
                                  already_tested: Vec<ProcessPtr>)
-                                 -> (Vec<(ProcessPtr, usize)>, ResourceList) {
+                                 -> (ProcessList, ResourceList) {
         let nb_process = selfp.borrow().can_trigger(&resources);
         let mut new_resources = resources.launch_process(selfp.clone(), nb_process);
         if new_resources.is_empty() {
-            (vec![(selfp.clone(), nb_process)], new_resources)
+            let mut process_list = ProcessList::new();
+            process_list.add(selfp, nb_process);
+            (process_list, new_resources)
         } else {
             unimplemented!();
         }

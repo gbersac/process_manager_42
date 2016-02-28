@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use project::{Project, ProjectPtr, ResourceList};
+use project::{Project, ProjectPtr, ResourceList, ProcessList};
 use solver::end_process_stack::EndProcessStack;
 
 pub type NodePtr = Rc<Node>;
@@ -22,14 +22,14 @@ pub struct Node {
 
 impl Node {
     /// Return a list of process ready to be launch.
-    fn processes_ready(&self, project: ProjectPtr) -> Vec<(usize, usize)> {
-        let mut to_return = Vec::new();
+    fn processes_ready(&self, project: ProjectPtr) -> ProcessList {
+        let mut to_return = ProcessList::new();
         for i_process in 0..project.nb_process() {
             let process = project.get_process_by_index(i_process);
             let nb_process = process.borrow().can_trigger(&self.resources);
             let process_time = self.time + process.borrow().get_time();
             if nb_process > 0 && process_time < project.get_delay() {
-                to_return.push((i_process, nb_process));
+                to_return.add(process.clone(), nb_process);
             }
         }
         to_return
@@ -51,15 +51,14 @@ impl Node {
     /// a process in `processes_ready`
     fn child_from_process(&self,
                           project: ProjectPtr,
-                          processes_ready: Vec<(usize, usize)>)
+                          processes_ready: ProcessList)
                           -> (i32, NodePtr) {
-        processes_ready.iter().map(|&(i_process, nb_process)| {
+        processes_ready.iter().map(|&(ref process, nb_process)| {
             if processes_ready.len() == 1 {
-                let process = project.get_process_by_index(i_process);
                 let resources = self.resources
                                     .launch_process(process.clone(), nb_process);
                 let processes_to_end = self.processes_to_end
-                    .add_processes(project.clone(), i_process, nb_process);
+                    .add_processes(project.clone(), process.clone(), nb_process);
                 Node::new(project.clone(), self.time,
                           resources, processes_to_end)
             } else {

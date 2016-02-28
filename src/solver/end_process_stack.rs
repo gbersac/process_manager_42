@@ -1,32 +1,44 @@
 use std::collections::BinaryHeap;
-use project::{ProjectPtr, ResourceList};
+use project::{ProjectPtr, ResourceList, ProcessPtr};
 use std;
 use std::cmp::Ordering;
 
 const TIME_TO_TERMINATE: usize = 0;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 struct ProcessEnd {
     pub time: usize,
 
     /// Index of the process to terminate
-    pub index: usize,
+    pub process: ProcessPtr,
 
     /// Number of process to terminate
     pub number: usize,
 }
 
 impl ProcessEnd {
-    pub fn new(time: usize, index: usize, number: usize) -> ProcessEnd {
+    pub fn new(time: usize, process: ProcessPtr, number: usize) -> ProcessEnd {
         ProcessEnd {
             time: time,
-            index: index,
+            process: process,
             number: number,
         }
     }
 
     pub fn decrement(&mut self) {
         self.time -= 1;
+    }
+}
+
+impl Eq for ProcessEnd {
+    // add code here
+}
+
+impl PartialEq for ProcessEnd {
+    fn eq(&self, other: &Self) -> bool {
+        self.process.borrow().get_index() == other.process.borrow().get_index() &&
+                self.time == other.time &&
+                self.number == other.number
     }
 }
 
@@ -55,13 +67,12 @@ impl EndProcessStack {
 
     pub fn add_processes(&self,
                          project: ProjectPtr,
-                         i_process: usize,
+                         process: ProcessPtr,
                          nb_process: usize)
                          -> EndProcessStack {
         let mut to_return = self.clone();
-        let process = project.get_process_by_index(i_process);
         let time = process.borrow().get_time();
-        let process_end = ProcessEnd::new(time, i_process, nb_process);
+        let process_end = ProcessEnd::new(time, process, nb_process);
         to_return.processes_to_end.push(process_end);
         to_return
     }
@@ -118,7 +129,7 @@ impl EndProcessStack {
         let process_to_terminate = EndProcessStack::processes_terminating_this_turn(&new_bin);
         let mut to_return = resources.clone();
         for process_end in process_to_terminate {
-            let process = project.get_process_by_index(process_end.index).clone();
+            let process = process_end.process.clone();
             let post = process.borrow().get_post_vec().clone();
             for i in 0..project.nb_resource() {
                 to_return.add_resource(i, process_end.number * post[i]);
