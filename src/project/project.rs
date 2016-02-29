@@ -38,6 +38,10 @@ impl Project {
         self.resources[&index].clone()
     }
 
+    pub fn get_processes(&self) -> &BTreeMap<usize, ProcessPtr> {
+        &self.processes
+    }
+
     pub fn get_process_by_name(&self, name: &str) -> Option<ProcessPtr> {
         for (_, ref process) in &self.processes {
             if name == process.borrow().get_name() {
@@ -76,31 +80,14 @@ impl Project {
 
     /// Return a list of all the resources available at the begin of the
     /// simulation.
-    pub fn begin_resources(&self) -> Vec<usize> {
-        let mut to_return = Vec::with_capacity(self.nb_resource() + 1);
-        to_return.push(0);
-        for i in 0..self.nb_resource() {
-            let resource = self.resources[&i].clone();
-            to_return.push(resource.borrow().get_begin_quantity());
+    pub fn begin_resources(&self) -> ResourceList {
+        let mut to_return = ResourceList::new();
+        for (_, resource) in &self.resources {
+            to_return.add_resource(resource.clone(),
+                                    resource.borrow().get_begin_quantity());
         }
         to_return
     }
-
-    /// Return the maximum of time a process take to be executed.
-    pub fn get_max_process_time(&self) -> usize {
-        self.processes
-            .iter()
-            .map(|(_, p)| {
-                (*p).borrow()
-                    .get_time()
-            })
-            .max()
-            .unwrap()
-    }
-
-    /// ***********************************************************************
-    // New Project
-    /// ***********************************************************************
 
     /// Add resource `resource_name` if it doesn't already exist.
     fn add_ressource(&mut self, resource_name: String) -> ResourcePtr {

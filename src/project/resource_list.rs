@@ -14,6 +14,7 @@ impl ResourceList {
         }
     }
 
+    #[cfg(test)]
     pub fn from_vec(project: ProjectPtr, vec: Vec<usize>) -> ResourceList {
         if project.nb_resource() < vec.len() {
             panic!("ResourceList::from_vec error: too many resources in vector");
@@ -32,6 +33,7 @@ impl ResourceList {
         to_return
     }
 
+    #[cfg(test)]
     pub fn set_time_consumed(&mut self, time_consumed: usize) {
         self.time_consumed = time_consumed;
     }

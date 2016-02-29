@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use project::{Project, ProjectPtr, ResourceList, ProcessList, Process};
+use project::{ProjectPtr, ResourceList, ProcessList, Process};
 use solver::end_process_stack::EndProcessStack;
 
 pub type NodePtr = Rc<Node>;
@@ -24,11 +24,12 @@ impl Node {
     /// Return a list of process ready to be launch.
     fn processes_ready(&self, project: ProjectPtr) -> ProcessList {
         let mut to_return = ProcessList::new();
-        for i_process in 0..project.nb_process() {
-            let process = project.get_process_by_index(i_process);
+        println!("resources {:?}", self.resources);
+        for (_, process) in project.get_processes() {
             let nb_process = process.borrow().can_trigger(&self.resources);
             let process_time = self.time + process.borrow().get_time();
             if nb_process > 0 && process_time < project.get_delay() {
+                println!("to_return {:?}", nb_process);
                 to_return.add(process.clone(), nb_process);
             }
         }
@@ -97,7 +98,8 @@ impl Node {
             }
 
             // at least one process terminate, create new node
-            let mut resource = processes_to_end.pop_and_terminate(project.clone(), &self.resources);
+            let resource = processes_to_end.pop_and_terminate(project.clone(),
+                                                              &self.resources);
             return Node::new(project.clone(), new_time, resource, processes_to_end);
         }
     }
@@ -121,6 +123,7 @@ impl Node {
 
         // create all the possible child and select the best one
         let processes_ready = new_node.processes_ready(project.clone());
+        println!("processes_ready {:?}", processes_ready);
         let (weight, child) = if processes_ready.len() > 0 {
             new_node.child_from_process(project.clone(), processes_ready)
         } else {
@@ -133,7 +136,7 @@ impl Node {
     /// Create the root of the tree and all its childs.
     pub fn launch_node_tree(project: ProjectPtr) -> (i32, NodePtr) {
         let end_process_stack = EndProcessStack::new(project.clone());
-        let resource_list = ResourceList::new();
+        let resource_list = project.begin_resources();
         Node::new(project, 1, resource_list, end_process_stack)
     }
 
@@ -154,6 +157,7 @@ impl Node {
         self.child.clone()
     }
 
+    #[cfg(test)]
     pub fn get_final_resources(&self) -> &ResourceList {
         match self.child {
             Some(ref child) => child.get_final_resources(),
