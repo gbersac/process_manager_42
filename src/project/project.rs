@@ -186,12 +186,6 @@ impl Project {
         }
         project.resources_to_optimize = resources_to_optimize;
 
-        // initialize pre and post resources vec in processes
-        let nb_resource = project.nb_resource();
-        for (_, p) in &project.processes {
-            (**p).borrow_mut().init_resources_vec(nb_resource);
-        }
-
         // fill the `final_processes` attribute
         for (_, process) in &project.processes {
             if process.borrow().produce_resources(&project.resources_to_optimize) {

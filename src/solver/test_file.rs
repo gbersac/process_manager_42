@@ -22,7 +22,7 @@ fn test_one(file: &str,
     let project = Rc::new(Project::from_file(file, delay));
     println!("{:?}", project);
     let (weight, node) = solver::solve(project.clone());
-    let expected_resources = ResourceList::new(expected_resources);
+    let expected_resources = ResourceList::from_vec(project, expected_resources);
     let result = node.get_final_resources();
 
     println!("Result resources {:?} expected {:?}", result, expected_resources);

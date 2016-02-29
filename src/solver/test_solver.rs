@@ -5,7 +5,7 @@ use project::ResourceList;
 use solver::end_process_stack::EndProcessStack;
 use std;
 
-/// Launching `nb_process` process of index `i_process` must consume all the
+/// Launching `nb_process` process of name `process_name` must consume all the
 /// resources of  `resources` and consume `time` turn
 fn test_one0(file: &str,
              process_name: &str,
@@ -14,16 +14,13 @@ fn test_one0(file: &str,
              resources: Vec<usize>) {
     let project = Rc::new(Project::from_file(file, 1));
     println!("project {:?}", project);
-    let resource_list = ResourceList::new(resources);
+    let resource_list = ResourceList::from_vec(project.clone(), resources);
     let process = project.get_process_by_name(process_name).unwrap().clone();
     let result = resource_list.new_launch_process(process.clone(),
-                                              nb_process);
-    let mut res_vec = std::iter::repeat(0)
-                          .take(project.nb_resource() + 1)
-                          .collect::<Vec<usize>>();
-    res_vec[0] = time;
-    let expected = ResourceList::new(res_vec);
-    println!("expected {:?} found {:?}", expected, result);
+                                                  nb_process);
+    let mut expected = ResourceList::new();
+    expected.set_time_consumed(time);
+    println!("expected {} found {}", expected, result);
     assert!(result == expected);
 }
 
@@ -33,12 +30,12 @@ fn test_resource_list_launch_process() {
               "do_armoire_ikea",
               3,
               90,
-              vec![0, 0, 6, 3, 9, 0]);
+              vec![0, 6, 3, 9, 0]);
     test_one0("inputs/simple",
               "achat_materiel",
               1,
               10,
-              vec![0, 8, 0, 0, 0]);
+              vec![8, 0, 0, 0]);
 }
 
 /// For EndProcessStack::pop_and_terminate
@@ -46,10 +43,7 @@ fn test_resource_list_launch_process() {
 /// `expected_resources`
 fn test_one1(file: &str, processes: Vec<(&str, usize)>, expected_resources: Vec<usize>) {
     let project = Rc::new(Project::from_file(file, 1));
-    let res_vec = std::iter::repeat(0)
-                      .take(project.nb_resource() + 1)
-                      .collect::<Vec<usize>>();
-    let resource_list = ResourceList::new(res_vec);
+    let resource_list = ResourceList::new();
     let mut end_process_stack = EndProcessStack::new(project.clone());
     for (process_name, nb_process) in processes {
         let process = project.get_process_by_name(process_name).unwrap();
@@ -58,8 +52,9 @@ fn test_one1(file: &str, processes: Vec<(&str, usize)>, expected_resources: Vec<
                                                                               .get_index(),
                                                                        nb_process);
     }
-    let result = end_process_stack.pop_and_terminate(project, &resource_list);
-    let expected = ResourceList::new(expected_resources);
+    let result = end_process_stack.pop_and_terminate(project.clone(), &resource_list);
+    println!("ici");
+    let expected = ResourceList::from_vec(project.clone(), expected_resources);
     println!("expected {:?} found {:?}", expected, result);
     assert!(result == expected);
 }
@@ -68,8 +63,8 @@ fn test_one1(file: &str, processes: Vec<(&str, usize)>, expected_resources: Vec<
 fn test_end_process_stack__pop_and_terminate() {
     test_one1("inputs/recre",
               vec![("se_battre_dans_la_cours", 5), ("jouer_a_la_marelle", 1)],
-              vec![0, 5, 6, 1]);
+              vec![5, 6, 1]);
     test_one1("inputs/simple",
               vec![("achat_materiel", 1), ("realisation_produit", 1)],
-              vec![0, 0, 1, 1, 0]);
+              vec![0, 1, 1, 0]);
 }

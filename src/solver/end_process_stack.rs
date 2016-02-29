@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 
 const TIME_TO_TERMINATE: usize = 0;
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 struct ProcessEnd {
     pub time: usize,
 
@@ -55,7 +55,7 @@ impl PartialOrd for ProcessEnd {
 }
 
 /// List of all the process which are going to end in the future.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct EndProcessStack {
     processes_to_end: BinaryHeap<ProcessEnd>,
 }
@@ -82,12 +82,10 @@ impl EndProcessStack {
         to_return
     }
 
-    pub fn add_process_list(&mut self, list: ProcessList) -> EndProcessStack {
-        let mut to_return = self.clone();
+    pub fn add_process_list(&mut self, list: ProcessList) {
         for &(ref process, nb_process) in list.iter() {
-            to_return.add_processes(process.clone(), nb_process);
+            self.add_processes(process.clone(), nb_process);
         }
-        to_return
     }
 
     #[cfg(test)]
@@ -144,9 +142,10 @@ impl EndProcessStack {
         let mut to_return = resources.clone();
         for process_end in process_to_terminate {
             let process = process_end.process.clone();
-            let post = process.borrow().get_post_vec().clone();
-            for i in 0..project.nb_resource() {
-                to_return.add_resource(i, process_end.number * post[i]);
+            let products = process.borrow().get_products().clone();
+            for product in products {
+                let nb = process_end.number * product.get_value();
+                to_return.add_resource(product.get_resource(), nb);
             }
         }
 
@@ -160,5 +159,18 @@ impl EndProcessStack {
         self.processes_to_end = BinaryHeap::from(vec);
 
         to_return
+    }
+}
+
+use std::fmt::{Formatter, Debug, Error};
+
+impl Debug for EndProcessStack {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
+        write!(f, "EndProcessStack[");
+        for p in &self.processes_to_end {
+            write!(f, "{}:{}, ", p.process.borrow().get_name(), p.number);
+        }
+        write!(f, "]");
+        Ok(())
     }
 }

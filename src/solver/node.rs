@@ -38,6 +38,7 @@ impl Node {
     fn child_from_conflicting_processes(&self,
                                         project: ProjectPtr)
                                         -> (i32, NodePtr) {
+        println!("child_from_conflicting_processes");
         project.get_final_processes().iter().map(|final_process| {
             let mut new_resources = self.resources.clone();
             let new_processes =
@@ -47,6 +48,7 @@ impl Node {
             let mut processes_to_end = self.processes_to_end.clone();
             processes_to_end.add_process_list(new_processes);
             let node = Node::new(project.clone(), self.time, new_resources, processes_to_end);
+            println!("{:?}", node);
             node
         })
        .max_by_key(|&(weight, _)| weight)
@@ -131,7 +133,7 @@ impl Node {
     /// Create the root of the tree and all its childs.
     pub fn launch_node_tree(project: ProjectPtr) -> (i32, NodePtr) {
         let end_process_stack = EndProcessStack::new(project.clone());
-        let resource_list = ResourceList::new(project.begin_resources());
+        let resource_list = ResourceList::new();
         Node::new(project, 1, resource_list, end_process_stack)
     }
 
@@ -140,8 +142,7 @@ impl Node {
     fn compute_weight(&self, project: ProjectPtr) -> i32 {
         let mut to_return: i32 = 0;
         for res in project.get_resources_to_optimize() {
-            let i_resource = (*res).borrow().get_index();
-            to_return += self.resources.nb_resource(i_resource) as i32;
+            to_return += self.resources.nb_resource((*res).clone()) as i32;
         }
         if project.optimize_time() {
             to_return -= self.resources.time_consumed() as i32;
