@@ -54,7 +54,6 @@ impl ResourceList {
     }
 
     pub fn nb_resource(&self, i_resource: usize) -> usize {
-        println!("nb_resource {:?} i {} list[i] {}", self.list, i_resource, self.list[i_resource]);
         self.list[i_resource]
     }
 

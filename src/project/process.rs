@@ -149,8 +149,6 @@ impl Process {
                 continue;
             }
             let nb_match_i = resources.nb_resource(i) / self.pre_vec[i] as usize;
-            println!("resources.nb_resource {} / self.pre_vec {}", resources.nb_resource(i), self.pre_vec[i]);
-            println!("nb_match_i {:?}", nb_match_i);
             if nb_match_i == 0 {
                 return 0;
             } else if nb_match_i < nb_match {

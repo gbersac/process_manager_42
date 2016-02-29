@@ -46,7 +46,8 @@ impl Node {
                                                    &mut Vec::new());
             let mut processes_to_end = self.processes_to_end.clone();
             processes_to_end.add_process_list(new_processes);
-            Node::new(project.clone(), self.time, new_resources, processes_to_end)
+            let node = Node::new(project.clone(), self.time, new_resources, processes_to_end);
+            node
         })
        .max_by_key(|&(weight, _)| weight)
        .unwrap()
@@ -64,7 +65,7 @@ impl Node {
                                     .new_launch_process(process.clone(),
                                                         nb_process);
                 let processes_to_end = self.processes_to_end
-                    .add_processes(project.clone(), process.clone(), nb_process);
+                    .new_add_processes(process.clone(), nb_process);
                 Node::new(project.clone(), self.time,
                           resources, processes_to_end)
             } else {

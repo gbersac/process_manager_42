@@ -65,24 +65,27 @@ impl EndProcessStack {
         EndProcessStack { processes_to_end: BinaryHeap::new() }
     }
 
-    pub fn add_processes(&self,
-                         project: ProjectPtr,
-                         process: ProcessPtr,
-                         nb_process: usize)
-                         -> EndProcessStack {
-        let mut to_return = self.clone();
+    fn add_processes(&mut self,
+                     process: ProcessPtr,
+                     nb_process: usize) {
         let time = process.borrow().get_time();
         let process_end = ProcessEnd::new(time, process, nb_process);
-        to_return.processes_to_end.push(process_end);
+        self.processes_to_end.push(process_end);
+    }
+
+    pub fn new_add_processes(&self,
+                             process: ProcessPtr,
+                             nb_process: usize)
+                             -> EndProcessStack {
+        let mut to_return = self.clone();
+        to_return.add_processes(process, nb_process);
         to_return
     }
 
     pub fn add_process_list(&mut self, list: ProcessList) -> EndProcessStack {
         let mut to_return = self.clone();
-        for &(ref process, nb) in list.iter() {
-            let time = process.borrow().get_time();
-            let process_end = ProcessEnd::new(time, process.clone(), nb);
-            to_return.processes_to_end.push(process_end);
+        for &(ref process, nb_process) in list.iter() {
+            to_return.add_processes(process.clone(), nb_process);
         }
         to_return
     }
