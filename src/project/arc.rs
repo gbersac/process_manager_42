@@ -94,7 +94,7 @@ use std::fmt::{Formatter, Debug, Error};
 
 impl Debug for Arc {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        match self.arc_type {
+        let _ = match self.arc_type {
             ArcType::Pre => {
                 write!(f,
                        "{}->{}",

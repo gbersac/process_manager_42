@@ -1,0 +1,10 @@
+# The program must split initial resources to trigger pre1 and pre2 to create
+# final resource
+
+euro:2
+
+pre1:(euro:1):(a:1):1
+pre2:(euro:1):(b:1):1
+end:(a:1;b:1):(final:1):1
+
+optimize:(final)

@@ -1,3 +1,4 @@
+# Have to launch a lot of processes at the beginning.
 money:1000000
 
 buy1:(money:1):(final:2):1

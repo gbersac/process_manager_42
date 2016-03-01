@@ -24,12 +24,10 @@ impl Node {
     /// Return a list of process ready to be launch.
     fn processes_ready(&self, project: ProjectPtr) -> ProcessList {
         let mut to_return = ProcessList::new();
-        println!("resources {:?}", self.resources);
         for (_, process) in project.get_processes() {
             let nb_process = process.borrow().can_trigger(&self.resources);
             let process_time = self.time + process.borrow().get_time();
             if nb_process > 0 && process_time < project.get_delay() {
-                println!("to_return {:?}", nb_process);
                 to_return.add(process.clone(), nb_process);
             }
         }
@@ -39,7 +37,6 @@ impl Node {
     fn child_from_conflicting_processes(&self,
                                         project: ProjectPtr)
                                         -> (i32, NodePtr) {
-        println!("child_from_conflicting_processes");
         project.get_final_processes().iter().map(|final_process| {
             let mut new_resources = self.resources.clone();
             let new_processes =
@@ -49,7 +46,7 @@ impl Node {
             let mut processes_to_end = self.processes_to_end.clone();
             processes_to_end.add_process_list(new_processes);
             let node = Node::new(project.clone(), self.time, new_resources, processes_to_end);
-            println!("{:?}", node);
+            println!("{}", node.1);
             node
         })
        .max_by_key(|&(weight, _)| weight)
@@ -123,7 +120,6 @@ impl Node {
 
         // create all the possible child and select the best one
         let processes_ready = new_node.processes_ready(project.clone());
-        println!("processes_ready {:?}", processes_ready);
         let (weight, child) = if processes_ready.len() > 0 {
             new_node.child_from_process(project.clone(), processes_ready)
         } else {
