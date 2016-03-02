@@ -1,0 +1,9 @@
+# two chain are in paralel. Both must be launch at the same time
+
+pre1:1
+pre2:1
+
+p1:(pre1:1):(final1:1):1
+p2:(pre2:1):(final2:1):1
+
+optimize:(final1;final2)

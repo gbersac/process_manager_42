@@ -40,5 +40,8 @@ fn test_solve() {
     test_one("inputs/tests/recycle", 10, 4, vec![0, 1, 0, 2], 2);
     test_one("inputs/tests/sacrifice", 6, 2, vec![2, 0], 2);
     test_one("inputs/tests/many_processes", 6, 1000000, vec![0, 2000000], 2000000);
-    test_one("inputs/tests/split_resources", 9, 3, vec![0, 0, 0, 2], 2);
+    test_one("inputs/tests/split_resources", 9, 2, vec![0, 0, 0, 2], 2);
+    test_one("inputs/tests/multi_dependences", 5, 4,
+             vec![2, 0, 0, 0, 0, 0, 0], 2);
+    test_one("inputs/tests/paralel", 3, 2, vec![0, 0, 1, 1], 0);
 }
